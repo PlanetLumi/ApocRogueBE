@@ -11,22 +11,18 @@ public final class DataSourceSingleton {
     static {
         HikariConfig config = new HikariConfig();
 
-        // These env-vars will be set when you deploy your function
-        String instance = System.getenv("INSTANCE_CONNECTION_NAME");
-        String dbName   = System.getenv("DB_NAME");
-        String user     = System.getenv("DB_USER");
-        String pass     = System.getenv("DB_PASS");
+        // env-vars for your DB creds
+        String dbName = System.getenv("DB_NAME");
+        String user   = System.getenv("DB_USER");
+        String pass   = System.getenv("DB_PASS");
 
-        // build the JDBC URL for the Cloud SQL SocketFactory
-        String jdbcUrl = String.format(
-                "jdbc:mysql:///%s?cloudSqlInstance=%s&socketFactory=com.google.cloud.sql.mysql.SocketFactory",
-                dbName, instance
-        );
+        // point at the local Cloud SQL Auth proxy on localhost:3306
+        String jdbcUrl = String.format("jdbc:mysql://127.0.0.1:3306/%s", dbName);
         config.setJdbcUrl(jdbcUrl);
         config.setUsername(user);
         config.setPassword(pass);
 
-        // pool settings
+        // your pool settings
         config.setMaximumPoolSize(5);
         config.setMinimumIdle(1);
         config.setConnectionTimeout(30_000);

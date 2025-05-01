@@ -1,6 +1,7 @@
 import com.google.cloud.functions.HttpFunction;
 import com.google.cloud.functions.HttpRequest;
 import com.google.cloud.functions.HttpResponse;
+
 import java.sql.Connection;
 
 public class HealthCheck implements HttpFunction {

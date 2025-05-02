@@ -11,18 +11,27 @@ public final class DataSourceSingleton {
     static {
         HikariConfig config = new HikariConfig();
 
-        // env-vars for your DB creds
-        String dbName = System.getenv("DB_NAME");
-        String user   = System.getenv("DB_USER");
-        String pass   = System.getenv("DB_PASS");
+        // pull in all three from env-vars
+        String dbName   = System.getenv("DB_NAME");
+        String user     = System.getenv("DB_USER");
+        String pass     = System.getenv("DB_PASS");
+        String instance = System.getenv("INSTANCE_CONNECTION_NAME");
 
-        // point at the local Cloud SQL Auth proxy on localhost:3306
-        String jdbcUrl = String.format("jdbc:mysql://127.0.0.1:3306/%s", dbName);
+        // tell the driver to use the Cloud SQL socket factory
+        String jdbcUrl =
+                String.format(
+                        "jdbc:mysql:///%s" +
+                                "?socketFactory=com.google.cloud.sql.mysql.SocketFactory" +
+                                "&cloudSqlInstance=%s" +
+                                "&useSSL=false",          // optional, but avoids cert headaches
+                        dbName, instance
+                );
+
         config.setJdbcUrl(jdbcUrl);
         config.setUsername(user);
         config.setPassword(pass);
 
-        // your pool settings
+        // (you can tune these however you like)
         config.setMaximumPoolSize(5);
         config.setMinimumIdle(1);
         config.setConnectionTimeout(30_000);
@@ -30,9 +39,8 @@ public final class DataSourceSingleton {
         ds = new HikariDataSource(config);
     }
 
-    private DataSourceSingleton() { /* no-op */ }
+    private DataSourceSingleton() { }
 
-    /** Grab a connection from the pool */
     public static Connection getConnection() throws SQLException {
         return ds.getConnection();
     }

@@ -1,4 +1,4 @@
-// src/main/java/apocRogueBE/LoginSystem.java
+// LoginSystem.java
 package apocRogueBE;
 
 import com.google.cloud.functions.HttpFunction;
@@ -13,45 +13,37 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
 
-/**
- * HTTP POST /login
- *   { "username": "...", "password": "..." }
- *
- *  → 200 + {"authenticated":true} or 401 + {"authenticated":false}
- */
 public class LoginSystem implements HttpFunction {
     private static final Gson gson = new Gson();
 
     @Override
-    public void service(HttpRequest request, HttpResponse response) throws Exception {
-        BufferedWriter w = response.getWriter();
-        UserCredentials cred = gson.fromJson(request.getReader(), UserCredentials.class);
+    public void service(HttpRequest req, HttpResponse resp) throws Exception {
+        BufferedWriter w = resp.getWriter();
+        UserCredentials cred = gson.fromJson(req.getReader(), UserCredentials.class);
 
-        // Basic validation
-        if (cred.getUsername() == null || cred.getPassword() == null) {
-            response.setStatusCode(400);
-            w.write("{\"error\":\"Missing username or password\"}");
+        if (cred==null
+                || cred.getUsername()==null || cred.getUsername().isBlank()
+                || cred.getPassword()==null || cred.getPassword().isBlank()) {
+            resp.setStatusCode(400);
+            w.write("{\"error\":\"username and password required\"}");
             return;
         }
 
         String sql = "SELECT COUNT(*) FROM UserCredentials WHERE username=? AND password=?";
-        try (Connection conn = DataSourceSingleton.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection c = DataSourceSingleton.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
 
             ps.setString(1, cred.getUsername());
             ps.setString(2, cred.getPassword());
             try (ResultSet rs = ps.executeQuery()) {
-                boolean auth = false;
-                if (rs.next() && rs.getInt(1) == 1) {
-                    auth = true;
-                }
-                response.setStatusCode(auth ? 200 : 401);
-                w.write(gson.toJson(Map.of("authenticated", auth)));
+                boolean ok = rs.next() && rs.getInt(1)==1;
+                resp.setStatusCode(ok?200:401);
+                w.write(gson.toJson(Map.of("authenticated", ok)));
             }
 
         } catch (SQLException e) {
-            response.setStatusCode(500);
-            w.write("{\"error\":\"" + e.getMessage().replace("\"", "\\\"") + "\"}");
+            resp.setStatusCode(500);
+            w.write("{\"error\":\"" + e.getMessage().replace("\"","\\\"") + "\"}");
         }
     }
 }

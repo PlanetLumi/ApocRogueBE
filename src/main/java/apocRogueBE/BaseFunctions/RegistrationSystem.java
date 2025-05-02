@@ -1,6 +1,8 @@
 // src/main/java/apocRogueBE/RegistrationSystem.java
-package apocRogueBE;
+package apocRogueBE.BaseFunctions;
 
+import apocRogueBE.Security.PasswordUtils;
+import apocRogueBE.SingletonConnection.DataSourceSingleton;
 import com.google.cloud.functions.HttpFunction;
 import com.google.cloud.functions.HttpRequest;
 import com.google.cloud.functions.HttpResponse;
@@ -38,7 +40,8 @@ public class RegistrationSystem implements HttpFunction {
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, cred.getUsername());
-            ps.setString(2, cred.getPassword());
+            String hashed = PasswordUtils.hash(cred.getPassword());
+            ps.setString(2, hashed);
             int updated = ps.executeUpdate();
             if (updated == 1) {
                 response.setStatusCode(200);

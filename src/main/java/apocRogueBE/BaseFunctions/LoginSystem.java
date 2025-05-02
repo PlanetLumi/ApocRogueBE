@@ -1,6 +1,8 @@
 // LoginSystem.java
-package apocRogueBE;
+package apocRogueBE.BaseFunctions;
 
+import apocRogueBE.Security.PasswordUtils;
+import apocRogueBE.SingletonConnection.DataSourceSingleton;
 import com.google.cloud.functions.HttpFunction;
 import com.google.cloud.functions.HttpRequest;
 import com.google.cloud.functions.HttpResponse;
@@ -29,15 +31,22 @@ public class LoginSystem implements HttpFunction {
             return;
         }
 
-        String sql = "SELECT COUNT(*) FROM UserCredentials WHERE username=? AND password=?";
+        String sql = "SELECT password FROM UserCredentials WHERE username = ?";
         try (Connection c = DataSourceSingleton.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
 
             ps.setString(1, cred.getUsername());
-            ps.setString(2, cred.getPassword());
             try (ResultSet rs = ps.executeQuery()) {
-                boolean ok = rs.next() && rs.getInt(1)==1;
-                resp.setStatusCode(ok?200:401);
+                if (!rs.next()) {
+                    // no such user
+                    resp.setStatusCode(401);
+                    w.write("{\"authenticated\":false}");
+                    return;
+                }
+
+                String storedHash = rs.getString("password");
+                boolean ok = PasswordUtils.verify(cred.getPassword(), storedHash);
+                resp.setStatusCode(ok ? 200 : 401);
                 w.write(gson.toJson(Map.of("authenticated", ok)));
             }
 

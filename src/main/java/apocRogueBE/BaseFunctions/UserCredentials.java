@@ -1,5 +1,5 @@
 // src/main/java/apocRogueBE/UserCredentials.java
-package apocRogueBE;
+package apocRogueBE.BaseFunctions;
 
 /**
  * Simple POJO for JSON <-> Java binding.

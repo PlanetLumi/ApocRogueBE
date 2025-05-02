@@ -1,4 +1,4 @@
-package apocRogueBE;
+package apocRogueBE.SingletonConnection;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;

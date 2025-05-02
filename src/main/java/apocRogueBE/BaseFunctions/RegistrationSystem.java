@@ -11,6 +11,7 @@ import com.google.gson.Gson;
 import java.io.BufferedWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
@@ -34,27 +35,41 @@ public class RegistrationSystem implements HttpFunction {
             return;
         }
 
-        // Insert into DB
-        String sql = "INSERT INTO UserCredentials (username, password) VALUES (?,?)";
-        try (Connection conn = DataSourceSingleton.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        // 1) Grab a Connection resource
+        try (Connection conn = DataSourceSingleton.getConnection()) {
 
-            ps.setString(1, cred.getUsername());
-            String hashed = PasswordUtils.hash(cred.getPassword());
-            ps.setString(2, hashed);
-            int updated = ps.executeUpdate();
-            if (updated == 1) {
-                response.setStatusCode(200);
-                w.write("{\"registered\":true}");
-            } else {
-                response.setStatusCode(500);
-                w.write("{\"registered\":false}");
+            // 2) Check for existing user
+            String checkSql = "SELECT 1 FROM UserCredentials WHERE username = ?";
+            try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
+                checkStmt.setString(1, cred.getUsername());
+                try (ResultSet rs = checkStmt.executeQuery()) {
+                    if (rs.next()) {
+                        // user already exists
+                        response.setStatusCode(409);
+                        w.write("{\"error\":\"Username already taken\"}");
+                        return;
+                    }
+                }
+            }
+
+            // 3) Insert new user
+            String insertSql = "INSERT INTO UserCredentials(username,password) VALUES (?,?)";
+            try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
+                insertStmt.setString(1, cred.getUsername());
+                String hashed = PasswordUtils.hash(cred.getPassword());
+                insertStmt.setString(2, hashed);
+                int updated = insertStmt.executeUpdate();
+                response.setStatusCode(updated == 1 ? 200 : 500);
+                w.write(updated == 1
+                        ? "{\"registered\":true}"
+                        : "{\"registered\":false}");
             }
 
         } catch (SQLException e) {
+            // Handle any unexpected SQL errors
             response.setStatusCode(500);
-            // In production, avoid returning raw SQL messages
-            w.write("{\"error\":\"" + e.getMessage().replace("\"", "\\\"") + "\"}");
+            w.write("{\"error\":\"" + e.getMessage().replace("\"","\\\"") + "\"}");
         }
     }
+
 }

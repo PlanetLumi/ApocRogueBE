@@ -30,6 +30,13 @@ public final class DataSourceSingleton {
         config.setJdbcUrl(jdbcUrl);
         config.setUsername(user);
         config.setPassword(pass);
+        // ─── Add these logs ───────────────────────────────────────────
+        System.out.println("🛠 DataSourceSingleton:");
+        System.out.println("    DB_NAME              = " + dbName);
+        System.out.println("    DB_USER              = " + user);
+        System.out.println("    INSTANCE_CONNECTION_NAME = " + instance);
+        System.out.println("    -> JDBC URL          = " + jdbcUrl);
+        // ───────────────────────────────────────────────────────────────
 
         // (you can tune these however you like)
         config.setMaximumPoolSize(5);

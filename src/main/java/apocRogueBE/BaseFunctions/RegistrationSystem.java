@@ -52,6 +52,7 @@ public class RegistrationSystem implements HttpFunction {
                 checkStmt.setString(1, cred.getUsername());
                 try (ResultSet rs = checkStmt.executeQuery()) {
                     if (rs.next()) {
+                        System.out.println(rs.getString(1));
                         // user already exists
                         response.setStatusCode(409);
                         w.write("{\"error\":\"Username already taken\"}");

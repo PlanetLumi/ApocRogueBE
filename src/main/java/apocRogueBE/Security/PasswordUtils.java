@@ -20,8 +20,15 @@ public final class PasswordUtils {
         }
         return BCrypt.checkpw(plain, storedHash);
     }
-    public static boolean validPassword(String password){
-        return (password.length() > 8) && password.matches("^(?=.*[A-Z].*[A-Z])(?=.*[!@#$&*])(?=.*[0-9].*[0-9])(?=.*[a-z].*[a-z].*[a-z])");
+    public static boolean validPassword(String password) {
+        return password.length() > 8
+                && password.matches(
+                "^(?=.*[A-Z].*[A-Z])"      // two uppercase
+                        + "(?=.*[!@#$&*])"           // one symbol
+                        + "(?=.*[0-9].*[0-9])"       // two digits
+                        + "(?=.*[a-z].*[a-z].*[a-z])"// three lower
+                        + ".+$"                     // <— consume the rest
+        );
     }
     public static int validatePassword(String password, String username){
         if(!validPassword(password)){

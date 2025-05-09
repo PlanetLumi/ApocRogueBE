@@ -26,8 +26,9 @@ public class RegistrationSystem implements HttpFunction {
     public void service(HttpRequest request, HttpResponse response) throws Exception {
         BufferedWriter w = response.getWriter();
         response.setContentType("application/json");
-
         UserCredentials cred = gson.fromJson(request.getReader(), UserCredentials.class);
+
+        // 0) Basic validation
         if (cred.getUsername() == null || cred.getPassword() == null) {
             response.setStatusCode(400);
             w.write("{\"error\":\"Missing username or password\"}");
@@ -41,11 +42,11 @@ public class RegistrationSystem implements HttpFunction {
             return;
         }
 
+        // 1) Open connection & start a transaction
         try (Connection conn = DataSourceSingleton.getConnection()) {
-            // use a transaction so we only commit both inserts together
             conn.setAutoCommit(false);
 
-            // 1) ensure username is free in Player
+            // 2) Ensure username is free in Player
             try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT 1 FROM Player WHERE username = ?")) {
                 ps.setString(1, cred.getUsername());
@@ -58,40 +59,44 @@ public class RegistrationSystem implements HttpFunction {
                 }
             }
 
-            // 2) insert into Player, get generated playerID
+            // 3) Create the Player row and grab its ID
             int playerId;
             try (PreparedStatement ps = conn.prepareStatement(
-                    "INSERT INTO Player(username, playerMS, playerCoin) VALUES (?, 0, 0)",
+                    "INSERT INTO Player(username, playerMS, playerCoin) VALUES (?,0,0)",
                     Statement.RETURN_GENERATED_KEYS)) {
                 ps.setString(1, cred.getUsername());
-                int affected = ps.executeUpdate();
-                if (affected != 1) throw new SQLException("Could not create Player row");
+                if (ps.executeUpdate() != 1) {
+                    throw new SQLException("Failed to insert Player");
+                }
                 try (ResultSet keys = ps.getGeneratedKeys()) {
-                    if (!keys.next()) throw new SQLException("No Player ID generated");
+                    if (!keys.next()) {
+                        throw new SQLException("No playerID returned");
+                    }
                     playerId = keys.getInt(1);
                 }
             }
 
-            // 3) insert into UserCredentials
+            // 4) Insert credentials tied to that playerID
             try (PreparedStatement ps = conn.prepareStatement(
-                    "INSERT INTO UserCredentials(playerID, username, password) VALUES (?,?,?)")) {
+                    "INSERT INTO UserCredentials(playerID,username,password) VALUES (?,?,?)")) {
                 ps.setInt(1, playerId);
-                ps.setString(2, cred.getUsername());           // if you still keep username column here
+                ps.setString(2, cred.getUsername());
                 ps.setString(3, PasswordUtils.hash(cred.getPassword()));
-                int affected = ps.executeUpdate();
-                if (affected != 1) throw new SQLException("Could not create credentials row");
+                if (ps.executeUpdate() != 1) {
+                    throw new SQLException("Failed to insert credentials");
+                }
             }
 
-            // 4) all good—commit and return success
+            // 5) Commit & respond
             conn.commit();
             response.setStatusCode(200);
             w.write("{\"registered\":true}");
 
         } catch (SQLException e) {
-            // rollback on any SQL failure
-            try { DataSourceSingleton.getConnection().rollback(); } catch(Exception ignore){}
+            // Rollback on any failure
             response.setStatusCode(500);
             w.write("{\"error\":\"" + e.getMessage().replace("\"","\\\"") + "\"}");
         }
     }
+
 }

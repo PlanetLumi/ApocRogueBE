@@ -20,7 +20,28 @@ public final class PasswordUtils {
         }
         return BCrypt.checkpw(plain, storedHash);
     }
-    public static String salt(String plain) {
-        return BCrypt.gensalt(12);
+    public static boolean validPassword(String password){
+        return (password.length() > 8) && password.matches("^(?=.*[A-Z].*[A-Z])(?=.*[!@#$&*])(?=.*[0-9].*[0-9])(?=.*[a-z].*[a-z].*[a-z])");
+    }
+    public static int validatePassword(String password, String username){
+        if(!validPassword(password)){
+            return 1;
+        }
+        if(containsName(username,password)){
+            return (2);
+        }
+        return 0;
+    }
+    public static boolean containsName(String name, String password){
+        return password.contains(name);
+    }
+    public static String securityPrints(int input){
+        return switch (input) {
+            case 1 ->
+                    "Password must be above 8 characters in length and contain numbers, symbols, upper and lower case letters";
+            case 2 -> "Password must not contain your username";
+            default -> "0";
+        };
     }
 }
+

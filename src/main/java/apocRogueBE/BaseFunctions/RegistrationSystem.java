@@ -14,6 +14,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import static apocRogueBE.Security.PasswordUtils.validatePassword;
+
 /**
  * HTTP POST /register
  *   { "username": "...", "password": "..." }
@@ -32,6 +34,12 @@ public class RegistrationSystem implements HttpFunction {
         if (cred.getUsername() == null || cred.getPassword() == null) {
             response.setStatusCode(400);
             w.write("{\"error\":\"Missing username or password\"}");
+            return;
+        }
+        String check = PasswordUtils.securityPrints(validatePassword(cred.getPassword(), cred.getUsername()));
+        if(!(check.equals("0"))){
+            response.setStatusCode(400);
+            w.write(check);
             return;
         }
 

@@ -38,7 +38,7 @@ public class RegistrationSystem implements HttpFunction {
         }
         String check = PasswordUtils.securityPrints(validatePassword(cred.getPassword(), cred.getUsername()));
         if(!(check.equals("0"))){
-            response.setStatusCode(400);
+            response.setStatusCode(401);
             w.write(check);
             return;
         }

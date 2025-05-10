@@ -20,7 +20,7 @@ import static apocRogueBE.Security.PasswordUtils.validatePassword;
  *  → { "registered": true } or { "error": "reason" }
  */
 public class RegistrationSystem implements HttpFunction {
-    private static final Gson gson = new Gson();
+    public static final Gson gson = new Gson();
 
     @Override
     public void service(HttpRequest request, HttpResponse response) throws Exception {

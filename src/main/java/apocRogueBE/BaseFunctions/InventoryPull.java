@@ -7,11 +7,13 @@ import com.google.cloud.functions.HttpRequest;
 import com.google.cloud.functions.HttpResponse;
 import com.google.common.io.BaseEncoding;
 import com.google.gson.Gson;
+import org.apache.http.HttpException;
 
 import java.io.BufferedWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,9 +27,16 @@ public class InventoryPull implements HttpFunction {
         resp.setContentType("application/json");
         BufferedWriter w = resp.getWriter();
         Connection conn = DataSourceSingleton.getConnection();
-        int playerId = AuthHelper.requirePlayerId(req, conn);
-        List<Map<String,Object>> out = new ArrayList<>();
+        int playerId;
+        try {
+            playerId = AuthHelper.requirePlayerId(req, conn);
+        } catch (HttpException e) {
+            resp.setStatusCode(401);
 
+            return;
+        }
+
+        List<Map<String,Object>> out = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement(
                 "SELECT itemCode, quantity FROM Inventory WHERE playerID=?")) {
             ps.setInt(1, playerId);
@@ -50,8 +59,13 @@ public class InventoryPull implements HttpFunction {
 
                 out.add(itemBean);
             }
-        }
-
+        } catch (SQLException e) {
+        resp.setStatusCode(500);
+        resp.getWriter().write(gson.toJson(Map.of("error", e.getMessage())));
+        return;
+    }
+        resp.setStatusCode(200);
+        resp.getWriter().write(gson.toJson(out));
         w.write(gson.toJson(out));
     }
 

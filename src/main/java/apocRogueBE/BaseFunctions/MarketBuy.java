@@ -81,7 +81,7 @@ public class MarketBuy implements HttpFunction {
 
             // 5) add to buyer inventory (upsert)
             try (PreparedStatement ps = c.prepareStatement(
-                    "INSERT INTO Inventory(playerID,itemID,quantity) VALUES(?,?,1)\n" +
+                    "INSERT INTO Inventory(playerID,itemCode,quantity) VALUES(?,?,1)\n" +
                             " ON DUPLICATE KEY UPDATE quantity=quantity+1")) {
                 ps.setInt(1, buyerId);
                 ps.setString(2, itemCode);

@@ -1,41 +1,39 @@
 package apocRogueBE.BaseFunctions;
-import apocRogueBE.Security.AuthHelper;
-import apocRogueBE.SingletonConnection.DataSourceSingleton;
-import apocRogueBE.Weapons.WeaponIDDecoder;
+
 import com.google.cloud.functions.HttpFunction;
 import com.google.cloud.functions.HttpRequest;
 import com.google.cloud.functions.HttpResponse;
-import com.google.common.io.BaseEncoding;
+import apocRogueBE.Security.AuthHelper;
+import apocRogueBE.SingletonConnection.DataSourceSingleton;
+import apocRogueBE.Weapons.WeaponIDDecoder;
 import com.google.gson.Gson;
-import org.apache.http.HttpException;
 
 import java.io.BufferedWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static apocRogueBE.BaseFunctions.RegistrationSystem.gson;
+import java.util.*;
 
 public class InventoryPull implements HttpFunction {
+    private static final Gson gson = new Gson();
+
     @Override
     public void service(HttpRequest req, HttpResponse resp) throws Exception {
         resp.setContentType("application/json");
         BufferedWriter w = resp.getWriter();
+
+        // 1) Auth
         Connection conn = DataSourceSingleton.getConnection();
-        int playerId;
+        final int playerId;
         try {
             playerId = AuthHelper.requirePlayerId(req, conn);
-        } catch (HttpException e) {
+        } catch (Exception e) {
             resp.setStatusCode(401);
-
+            w.write(gson.toJson(Map.of("error","Unauthorized")));
             return;
         }
 
+        // 2) Query
         List<Map<String,Object>> out = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement(
                 "SELECT itemCode, quantity FROM Inventory WHERE playerID=?")) {
@@ -44,29 +42,25 @@ public class InventoryPull implements HttpFunction {
             while (rs.next()) {
                 String code = rs.getString("itemCode");
                 int    cnt  = rs.getInt("quantity");
+                var dec = WeaponIDDecoder.decode(code);
 
-                // decode the code into stats
-                WeaponIDDecoder.Decoded dec = WeaponIDDecoder.decode(code);
-
-                // build your dummy‐item object
-                Map<String,Object> itemBean = new HashMap<>();
-                itemBean.put("itemCode",   code);
-                itemBean.put("typeID",     dec.typeID);
-                itemBean.put("skullLevel", dec.skullLevel);
-                itemBean.put("skullSub",   dec.skullSub);
-                itemBean.put("stats",      dec.stats);      // a map of statName→value
-                itemBean.put("count",      cnt);
-
-                out.add(itemBean);
+                Map<String,Object> item = new LinkedHashMap<>();
+                item.put("itemCode",   code);
+                item.put("typeID",     dec.typeID);
+                item.put("skullLevel", dec.skullLevel);
+                item.put("skullSub",   dec.skullSub);
+                item.put("stats",      dec.stats);
+                item.put("count",      cnt);
+                out.add(item);
             }
-        } catch (SQLException e) {
-        resp.setStatusCode(500);
-        resp.getWriter().write(gson.toJson(Map.of("error", e.getMessage())));
-        return;
-    }
+        } catch (Exception e) {
+            resp.setStatusCode(500);
+            w.write(gson.toJson(Map.of("error", e.getMessage())));
+            return;
+        }
+
+        // 3) Write once
         resp.setStatusCode(200);
-        resp.getWriter().write(gson.toJson(out));
         w.write(gson.toJson(out));
     }
-
 }

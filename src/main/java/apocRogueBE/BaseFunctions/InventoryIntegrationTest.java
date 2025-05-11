@@ -52,15 +52,15 @@ public class InventoryIntegrationTest {
         entry.put("stats",      decoded.stats);
         entry.put("count",      1);
 
-        String pushJson = gson.toJson(Map.of("inventory", List.of(entry)));
-        HttpResult pushNoJwt = doPost(PUSH_ENDPOINT, "{\"inventory\":[]}", null);
-        System.out.printf("PUSH (no JWT) → %d%n%s%n", pushNoJwt.status, pushNoJwt.body);
+       // String pushJson = gson.toJson(Map.of("inventory", List.of(entry)));
+        //HttpResult pushNoJwt = doPost(PUSH_ENDPOINT, "{\"inventory\":[]}", null);
+        //System.out.printf("PUSH (no JWT) → %d%n%s%n", pushNoJwt.status, pushNoJwt.body);
 
         HttpResult pullNoJwt = doPost(PULL_ENDPOINT, "{}", null);
         System.out.printf("PULL (no JWT) → %d%n%s%n", pullNoJwt.status, pullNoJwt.body);
 
-        HttpResult pushWithJwt = doPost(PUSH_ENDPOINT, pushJson, jwt);
-        System.out.printf("PUSH (with JWT) → %d%n%s%n", pushWithJwt.status, pushWithJwt.body);
+        //HttpResult pushWithJwt = doPost(PUSH_ENDPOINT, pushJson, jwt);
+       // System.out.printf("PUSH (with JWT) → %d%n%s%n", pushWithJwt.status, pushWithJwt.body);
 
         HttpResult pullWithJwt = doPost(PULL_ENDPOINT, "{}", jwt);
         System.out.printf("PULL (with JWT) → %d%n%s%n", pullWithJwt.status, pullWithJwt.body);

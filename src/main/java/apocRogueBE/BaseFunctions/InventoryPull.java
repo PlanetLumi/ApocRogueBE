@@ -29,7 +29,7 @@ public class InventoryPull implements HttpFunction {
         List<Map<String,Object>> out = new ArrayList<>();
 
         try (PreparedStatement ps = conn.prepareStatement(
-                "SELECT itemID, quantity FROM Inventory WHERE playerID=?")) {
+                "SELECT itemCode, quantity FROM Inventory WHERE playerID=?")) {
             ps.setInt(1, playerId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {

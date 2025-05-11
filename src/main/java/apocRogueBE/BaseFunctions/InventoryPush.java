@@ -65,7 +65,7 @@ public class InventoryPush implements HttpFunction {
 
             // 3) prepare upsert
             String sql = ""
-                    + "INSERT INTO Inventory(playerID, itemID, quantity) VALUES (?,?,?) "
+                    + "INSERT INTO Inventory(playerID, itemCode, quantity) VALUES (?,?,?) "
                     + "ON DUPLICATE KEY UPDATE quantity = ?";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 for (ItemEntry e : push.inventory) {

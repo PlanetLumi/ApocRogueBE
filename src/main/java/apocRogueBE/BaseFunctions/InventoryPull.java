@@ -33,7 +33,7 @@ public class InventoryPull implements HttpFunction {
             ps.setInt(1, playerId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                String code = rs.getString("itemID");
+                String code = rs.getString("itemCode");
                 int    cnt  = rs.getInt("quantity");
 
                 // decode the code into stats

@@ -1,93 +1,102 @@
 package apocRogueBE.BaseFunctions;
 
-import com.google.gson.Gson;
+import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
+
 import java.io.*;
+import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import apocRogueBE.Weapons.StatKeys;
-import apocRogueBE.Weapons.WeaponFactory;
-import apocRogueBE.Weapons.WeaponIDDecoder;
 
 public class InventoryIntegrationTest {
-    // TODO: point these at your actual deployed functions:
-    private static final String BASE_URL        =
-            "https://europe-west2-studious-camp-458516-f5.cloudfunctions.net";
-    private static final String PUSH_ENDPOINT   = BASE_URL + "/InventoryPush";
-    private static final String PULL_ENDPOINT   = BASE_URL + "/InventoryPull";
+    private static final String BASE          = "https://europe-west2-studious-camp-458516-f5.cloudfunctions.net";
+    private static final String LOGIN_ENDPOINT= BASE + "/loginSystem";
+    private static final String PUSH_ENDPOINT = BASE + "/inventorypush";
+    private static final String PULL_ENDPOINT = BASE + "/inventorypull";
 
-    // TODO: supply a real token
-    private static final String AUTH_TOKEN      = "Bearer YOUR_JWT_HERE";
-
-    private static final Gson gson = new Gson();
+    private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    private static final Type listOfMapsType = new TypeToken<List<Map<String,Object>>>(){}.getType();
 
     public static void main(String[] args) throws Exception {
-        // 1) Roll a fake ID + stats
-        String typeID = "01";   // your two-char ID
-        Map<String,Integer> base = new HashMap<>();
-        for (String stat : StatKeys.ALL) base.put(stat, 5);
-        String fakeId = WeaponFactory.rollAndEncode(typeID, base, 1, 1);
-        WeaponIDDecoder.Decoded decoded = WeaponIDDecoder.decode(fakeId);
+        // 0) Log in to get a JWT
+        Map<String,String> credentials = Map.of(
+                "username", "Lumie",
+                "password", "FuckYOU123!"
+        );
+        String loginReq  = gson.toJson(credentials);
+        String loginResp = httpPost(LOGIN_ENDPOINT, loginReq, null);
+        System.out.println("=== LOGIN RESPONSE ===\n" + loginResp);
 
-        // 2) Build push payload
+        JsonObject loginJson = JsonParser.parseString(loginResp).getAsJsonObject();
+        if (!loginJson.has("token")) {
+            throw new IllegalStateException("Login failed, no token in response");
+        }
+        String jwt = loginJson.get("token").getAsString();
+
+        // 1) Roll a fake weaponID using your server-side factory
+        String typeID = "01";  // adjust to a valid two-char typeID in your system
+        Map<String,Integer> baseStats = new HashMap<>();
+        for (String k : apocRogueBE.Weapons.StatKeys.ALL) baseStats.put(k, 5);
+        String fakeID = apocRogueBE.Weapons.WeaponFactory.rollAndEncode(typeID, baseStats, 1, 1);
+        apocRogueBE.Weapons.WeaponIDDecoder.Decoded d = apocRogueBE.Weapons.WeaponIDDecoder.decode(fakeID);
+
+        // 2) Build the JSON body for InventoryPush
         Map<String,Object> entry = new LinkedHashMap<>();
         entry.put("typeID",     typeID);
-        entry.put("skullLevel", decoded.skullLevel);
-        entry.put("skullSub",   decoded.skullSub);
-        entry.put("stats",      decoded.stats);
+        entry.put("skullLevel", d.skullLevel);
+        entry.put("skullSub",   d.skullSub);
+        entry.put("stats",      d.stats);
         entry.put("count",      1);
-
         Map<String,Object> pushBody = Map.of("inventory", List.of(entry));
         String pushJson = gson.toJson(pushBody);
 
-        // 3) Push it
-        System.out.println("=== PUSH REQUEST ===");
-        System.out.println(pushJson);
-        String pushResponse = httpPost(PUSH_ENDPOINT, pushJson);
-        System.out.println("=== PUSH RESPONSE ===");
-        System.out.println(pushResponse);
+        // 3) Send the push with Authorization header
+        String pushResp = httpPost(PUSH_ENDPOINT, pushJson, jwt);
+        System.out.println("\n=== PUSH RESPONSE ===\n" + pushResp);
 
-        // 4) Pull it back
-        System.out.println("\n=== PULL REQUEST ===");
-        String pullResponse = httpPost(PULL_ENDPOINT, "{}");
-        System.out.println("=== PULL RESPONSE ===");
-        System.out.println(pullResponse);
+        // 4) Now pull it back—again with the same JWT
+        String pullResp = httpPost(PULL_ENDPOINT, "{}", jwt);
+        System.out.println("\n=== PULL RESPONSE ===\n" + pullResp);
 
-        // 5) Parse and print counts
-        List<Map<String,Object>> inventory = gson.fromJson(
-                // strip the HTTP status line if you include it
-                pullResponse.replaceFirst("^HTTP \\d+\\r?\\n",""),
-                new TypeToken<List<Map<String,Object>>>(){}.getType()
-        );
-        System.out.println("\nParsed entries:");
-        for (var item : inventory) {
-            System.out.printf("  code=%s, count=%s%n",
-                    item.get("itemCode"), item.get("count"));
+        // 5) Parse the pull into a List<Map<String,Object>>
+        List<Map<String,Object>> items = gson.fromJson(pullResp, listOfMapsType);
+        System.out.println("\nParsed Pull (“count” field):");
+        for (Map<String,Object> it : items) {
+            System.out.printf("  %s → count=%s%n",
+                    it.get("itemCode"),
+                    it.get("count")
+            );
         }
     }
 
-    private static String httpPost(String urlString, String jsonBody) throws IOException {
-        URL url = new URL(urlString);
-        HttpURLConnection conn = (HttpURLConnection)url.openConnection();
-        conn.setRequestMethod("POST");
-        conn.setConnectTimeout(5_000);
-        conn.setReadTimeout(5_000);
-        conn.setDoOutput(true);
-        conn.setRequestProperty("Content-Type",  "application/json");
-        conn.setRequestProperty("Authorization", AUTH_TOKEN);
+    /**
+     * Sends a POST to `urlStr` with body JSON `body`.
+     * If `jwt` is non-null, attaches `Authorization: Bearer jwt`.
+     * Returns the raw response-body as a String.
+     */
+    private static String httpPost(String urlStr, String body, String jwt) throws IOException {
+        URL url = new URL(urlStr);
+        HttpURLConnection c = (HttpURLConnection) url.openConnection();
+        c.setRequestMethod("POST");
+        c.setRequestProperty("Content-Type", "application/json");
+        if (jwt != null) {
+            c.setRequestProperty("Authorization", "Bearer " + jwt);
+        }
+        c.setDoOutput(true);
+        c.setConnectTimeout(5000);
+        c.setReadTimeout(5000);
 
-        try (OutputStream os = conn.getOutputStream()) {
-            os.write(jsonBody.getBytes(StandardCharsets.UTF_8));
+        try (OutputStream os = c.getOutputStream()) {
+            os.write(body.getBytes(StandardCharsets.UTF_8));
         }
 
-        int status = conn.getResponseCode();
+        int status = c.getResponseCode();
         InputStream in = (status >= 200 && status < 300)
-                ? conn.getInputStream()
-                : conn.getErrorStream();
-
-        String body = new String(in.readAllBytes(), StandardCharsets.UTF_8);
-        return "HTTP " + status + "\n" + body;
+                ? c.getInputStream()
+                : c.getErrorStream();
+        String resp = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        return resp;
     }
 }

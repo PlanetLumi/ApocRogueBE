@@ -40,7 +40,7 @@ public class WeaponGenerate implements HttpFunction {
     private static Map<String,WeaponData> loadAllWeaponData() {
         try (InputStream in = WeaponGenerate.class
                 .getClassLoader()
-                .getResourceAsStream("items/items.json")) {
+                .getResourceAsStream("items.json")) {
             if (in == null) {
                 throw new RuntimeException("items.json not found on classpath");
             }

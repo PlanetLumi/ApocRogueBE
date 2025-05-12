@@ -15,4 +15,17 @@ public class WeaponData {
     public float dashSpeed;
     public float dashDuration;
     public float dashCooldown;
+    public int getStat(String statKey) {
+        return switch(statKey) {
+            case "damage"           -> damage;
+            case "projectileValue"  -> projectileValue;
+            case "animationSpeed"   -> animationSpeed;
+            case "noiseLevel"       -> noiseLevel;
+            case "dashSpeed"        -> Math.round(dashSpeed);
+            case "dashDuration"     -> Math.round(dashDuration);
+            case "dashCooldown"     -> Math.round(dashCooldown);
+            default                  -> 0;
+        };
+    }
+
 }

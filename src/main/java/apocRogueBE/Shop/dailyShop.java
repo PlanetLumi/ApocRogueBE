@@ -71,7 +71,6 @@ public class dailyShop implements HttpFunction {
             dto.items        = entries;
 
             resp.setStatusCode(200);
-            out.write(GSON.toJson(dto));
 
             out.write(GSON.toJson(dto));
         } catch (IllegalArgumentException iae) {

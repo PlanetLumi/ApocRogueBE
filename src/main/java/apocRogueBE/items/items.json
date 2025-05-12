@@ -1,0 +1,46 @@
+[
+  {
+    "name": "Sword",
+    "typeID": "01",
+    "damage": 10,
+    "projectileValue": 0,
+    "animationSpeed": 5,
+    "noiseLevel": 1,
+    "dashSpeed": 0.0,
+    "dashDuration": 0.0,
+    "dashCooldown": 0.0
+  },
+  {
+    "name": "Bow",
+    "typeID": "02",
+    "damage": 5,
+    "projectileValue": 2,
+    "animationSpeed": 1,
+    "noiseLevel": 4,
+    "dashSpeed": 0.0,
+    "dashDuration": 0.0,
+    "dashCooldown": 0.0
+  },
+  {
+    "name": "HandGun",
+    "typeID": "03",
+    "damage": 10,
+    "projectileValue": 10,
+    "animationSpeed": 1,
+    "noiseLevel": 10,
+    "dashSpeed": 0.0,
+    "dashDuration": 0.0,
+    "dashCooldown": 0.0
+  },
+  {
+    "name": "Katana",
+    "typeID": "04",
+    "damage": 15,
+    "projectileValue": 0,
+    "animationSpeed": 5,
+    "noiseLevel": 2,
+    "dashSpeed": 1500.0,
+    "dashDuration": 0.2,
+    "dashCooldown": 4.0
+  }
+]

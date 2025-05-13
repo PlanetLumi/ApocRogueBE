@@ -76,10 +76,18 @@ public class dailyShop implements HttpFunction {
         } catch (IllegalArgumentException iae) {
             resp.setStatusCode(400);
             resp.getWriter().write(GSON.toJson(Map.of("error", iae.getMessage())));
-        } catch (Exception e) {
+        }catch (Exception e) {
             resp.setStatusCode(500);
-            resp.getWriter().write(GSON.toJson(Map.of("error","Could not build shop",
-                    "details", e.getMessage())));
+
+            Map<String, Object> body = new HashMap<>();
+            body.put("error",   "Could not build shop");
+            body.put("details", Optional.ofNullable(e.getMessage())
+                    .orElse(e.getClass().getName()));
+
+            resp.getWriter().write(GSON.toJson(body));
+
+            // also log the full stack trace so you can see the *real* failure
+            e.printStackTrace();                // or your logger of choice
         }
     }
 }

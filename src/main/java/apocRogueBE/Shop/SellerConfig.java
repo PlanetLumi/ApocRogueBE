@@ -19,8 +19,8 @@ public final class SellerConfig {
     /** Master map  sellerID → Seller  */
     private static final Map<String, Seller> TABLE = Map.of(
             //               name               portrait   typeIDs
-            "A", new Seller("Bartholomew",      "traderA", List.of("05","06","07")),
-            "B", new Seller("Destaros",         "traderB", List.of("20","21")),
+            "A", new Seller("Bartholomew",      "traderA", List.of("20","21")),
+            "B", new Seller("Destaros",         "traderB", List.of("05","06","07")),
             "C", new Seller("Igor",             "traderC", List.of("01","02","03","04"))
     );
 

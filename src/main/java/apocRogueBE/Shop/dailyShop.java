@@ -12,29 +12,35 @@ import java.time.LocalDate;
 import java.util.*;
 
 public class dailyShop implements HttpFunction {
-    private static final Gson GSON = new Gson();
+    private static final Gson   GSON    = new Gson();
     private static final String VERSION = "v1";
     private static final String SECRET  = System.getenv("SHOP_SALT");
 
     @Override
     public void service(HttpRequest req, HttpResponse resp) throws Exception {
         resp.setContentType("application/json");
-        try (BufferedWriter out = resp.getWriter();
-             Connection     conn = DataSourceSingleton.getConnection()) {
 
-            int playerId = AuthHelper.requirePlayerId(req, conn);
+        /* ────────────────────────────────
+         *  Single writer for the *entire* request.
+         *  The servlet container will close it
+         *  automatically when service() returns.
+         * ──────────────────────────────── */
+        BufferedWriter out = resp.getWriter();
+
+        try (Connection conn = DataSourceSingleton.getConnection()) {
+            int    playerId = AuthHelper.requirePlayerId(req, conn);
             String sellerId = req.getFirstQueryParameter("seller")
                     .orElseThrow(() -> new IllegalArgumentException("Missing seller"));
 
             // deterministic RNG
             String today = LocalDate.now().toString();
-            long seed = Objects.hash(playerId, sellerId, today, VERSION, SECRET);
-            Random rng = new Random(seed);
+            long   seed  = Objects.hash(playerId, sellerId, today, VERSION, SECRET);
+            Random rng   = new Random(seed);
 
             // roll base inventory
             List<ShopItem> base = ShopGenerator.generateShop(rng, sellerId, playerId);
 
-            // fetch previously-bought quantities
+            // previously-bought quantities
             Map<String,Integer> bought = new HashMap<>();
             String sql = """
               SELECT item_code, quantity
@@ -49,16 +55,17 @@ public class dailyShop implements HttpFunction {
                 }
             }
 
-            // translate to DTO
+            // DTO conversion
             List<ShopEntry> entries = new ArrayList<>();
             for (ShopItem it : base) {
-                int remaining = Math.max(0, it.getBaseStock() - bought.getOrDefault(it.getCode(),0));
-                entries.add(new ShopEntry(){
-                    { itemCode = it.getCode();
-                        typeID   = it.getCode().substring(2,4); // first two after "ID"/"IT"
-                        price    = it.getPrice();
-                        remaining= remaining; }
-                });
+                int remaining = Math.max(0, it.getBaseStock()
+                        - bought.getOrDefault(it.getCode(), 0));
+                entries.add(new ShopEntry() {{
+                    itemCode  = it.getCode();
+                    typeID    = it.getCode().substring(2, 4);
+                    price     = it.getPrice();
+                    remaining = remaining;
+                }});
             }
 
             SellerConfig.Seller cfg = SellerConfig.get(sellerId);
@@ -71,23 +78,21 @@ public class dailyShop implements HttpFunction {
             dto.items        = entries;
 
             resp.setStatusCode(200);
-
             out.write(GSON.toJson(dto));
+
         } catch (IllegalArgumentException iae) {
             resp.setStatusCode(400);
-            resp.getWriter().write(GSON.toJson(Map.of("error", iae.getMessage())));
-        }catch (Exception e) {
-            resp.setStatusCode(500);
+            out.write(GSON.toJson(Map.of("error", iae.getMessage())));
 
-            Map<String, Object> body = new HashMap<>();
+        } catch (Exception e) {
+            resp.setStatusCode(500);
+            Map<String,Object> body = new HashMap<>();
             body.put("error",   "Could not build shop");
             body.put("details", Optional.ofNullable(e.getMessage())
                     .orElse(e.getClass().getName()));
-
-            resp.getWriter().write(GSON.toJson(body));
-
-            // also log the full stack trace so you can see the *real* failure
-            e.printStackTrace();                // or your logger of choice
+            out.write(GSON.toJson(body));
+            e.printStackTrace();          // surface full stack in Cloud Logs
         }
+        /* no explicit out.close(); container handles it */
     }
 }

@@ -13,6 +13,7 @@ import apocRogueBE.Weapons.StatKeys;
 
 import java.io.BufferedWriter;
 import java.io.InputStreamReader;
+import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.time.LocalDate;
@@ -77,6 +78,7 @@ public class LevelItemGenerate implements HttpFunction {
                             LocalDate.now().toString(),
                             g.chestX, g.chestY
                                 );
+
         Random rng = new Random(seed);
 
         List<GenerateResponse> loot = new ArrayList<>();
@@ -153,7 +155,8 @@ public class LevelItemGenerate implements HttpFunction {
 
     /* ─────────── seed mixer ─────────────────────────────── */
     private long hashSeed(int d, int s, int r, String date, float x, float y){
-        long h = 1125899906842597L; // prime seed
+        SecureRandom sr = new SecureRandom();
+        long h =sr.nextLong();   // prime seed
         h = 31*h + d;
         h = 31*h + s;
         h = 31*h + r;

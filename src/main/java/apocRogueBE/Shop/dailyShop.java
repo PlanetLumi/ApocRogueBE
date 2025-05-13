@@ -64,23 +64,25 @@ public class dailyShop implements HttpFunction {
             Map<String,WeaponData> weapons = ShopGenerator.loadWeaponData();
 
             List<ShopEntry> entries = new ArrayList<>();
+
             for (ShopItem it : base) {
                 ShopEntry e = new ShopEntry();
                 e.itemCode  = it.getCode();
-                e.typeID    = it.getCode().substring(2, 4);
+                e.typeID    = it.getCode().substring(2,4);
                 e.price     = it.getPrice();
                 e.remaining = Math.max(0, it.getBaseStock()
-                        - bought.getOrDefault(it.getCode(), 0));
+                        - bought.getOrDefault(it.getCode(),0));
 
-                if (weaponSeller) {
-                    WeaponData wd = Objects.requireNonNull(weapons.get(e.typeID),
-                            "Unknown weapon typeID " + e.typeID);
+                if ("C".equalsIgnoreCase(sellerId)) {                       // weapons
+                    WeaponData wd = Objects.requireNonNull(
+                            weapons.get(e.typeID), "unknown weapon "+e.typeID);
                     e.name        = wd.name;
                     e.texturePath = wd.texturePath;
-                } else {
-                    ItemTypeRegistry reg = potionSeller ? potions : items;
-                    ItemTypeInfo info   = Objects.requireNonNull(reg.getByTypeID(e.typeID),
-                            "Unknown item typeID " + e.typeID);
+
+                } else {                                                    // items/potions
+                    ItemTypeRegistry reg = "A".equalsIgnoreCase(sellerId) ? potions : items;
+                    ItemTypeInfo info = Objects.requireNonNull(
+                            reg.getByTypeID(e.typeID), "unknown item "+e.typeID);
                     e.name        = info.getName();
                     e.texturePath = info.getTexturePath();
                 }

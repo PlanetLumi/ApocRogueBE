@@ -106,7 +106,7 @@ public class buyItem implements HttpFunction {
             /* 7 ── add to Inventory */
             try (PreparedStatement ps = conn.prepareStatement(
                     """
-                    INSERT INTO Inventory(player_id,item_code,quantity)
+                    INSERT INTO Inventory(playerID,itemCode,quantity)
                          VALUES(?,?,?)
                     ON DUPLICATE KEY UPDATE quantity=quantity+?
                     """)) {

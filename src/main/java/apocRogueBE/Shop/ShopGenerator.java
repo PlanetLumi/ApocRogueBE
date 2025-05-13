@@ -62,7 +62,7 @@ public class ShopGenerator {
     private static Map<String, WeaponData> loadWeaponData() {
         try (InputStream in = ShopGenerator.class
                 .getClassLoader()
-                .getResourceAsStream("weapons/items.json")) {
+                .getResourceAsStream("/Items/items.json")) {
             Type listType = new TypeToken<List<WeaponData>>() {}.getType();
             List<WeaponData> list = GSON.fromJson(new InputStreamReader(in), listType);
             Map<String, WeaponData> map = new HashMap<>();

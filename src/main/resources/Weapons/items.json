@@ -2,6 +2,8 @@
   {
     "name": "Sword",
     "typeID": "01",
+    "texturePath": "ui/sword.png",
+    "ammoTexture": "ui/slash.png",
     "damage": 10,
     "projectileValue": 0,
     "animationSpeed": 5,
@@ -13,6 +15,9 @@
   {
     "name": "Bow",
     "typeID": "02",
+    "texturePath": "ui/bow.png",
+    "ammoTexture": "ui/arrow.png",
+
     "damage": 5,
     "projectileValue": 2,
     "animationSpeed": 1,
@@ -24,6 +29,9 @@
   {
     "name": "HandGun",
     "typeID": "03",
+    "texturePath": "ui/bow.png",
+    "ammoTexture": "ui/arrow.png",
+
     "damage": 10,
     "projectileValue": 10,
     "animationSpeed": 1,
@@ -35,6 +43,9 @@
   {
     "name": "Katana",
     "typeID": "04",
+    "texturePath": "ui/katana.png",
+    "ammoTexture": "ui/katana.png",
+
     "damage": 15,
     "projectileValue": 0,
     "animationSpeed": 5,

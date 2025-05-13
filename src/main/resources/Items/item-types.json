@@ -1,19 +1,19 @@
 {
-  "01": {
+  "05": {
     "name": "Med-Kit",
-    "texturePath": "textures/items/medkit.png",
+    "texturePath": "ui/potion.png",
     "stackable": true,
     "maxStack": 3
   },
-  "02": {
+  "06": {
     "name": "Iron Key",
-    "texturePath": "textures/items/key_iron.png",
+    "texturePath": "ui/potion.png",
     "stackable": false,
     "maxStack": 1
   },
-  "03": {
+  "07": {
     "name": "Gold Coin",
-    "texturePath": "textures/items/coin_gold.png",
+    "texturePath": "ui/potion.png",
     "stackable": true,
     "maxStack": 99
   }

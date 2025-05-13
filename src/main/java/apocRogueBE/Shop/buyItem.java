@@ -110,11 +110,18 @@ public class buyItem implements HttpFunction {
                          VALUES(?,?,?)
                     ON DUPLICATE KEY UPDATE quantity=quantity+?
                     """)) {
+                System.out.printf(
+                        "buyItem: player=%d  itemCode=%s  inserting into Inventory…%n",
+                        playerId, br.itemCode());
                 ps.setInt   (1, playerId);
                 ps.setString(2, br.itemCode());
                 ps.setInt   (3, br.count());
                 ps.setInt   (4, br.count());
                 ps.executeUpdate();
+            } catch (SQLException ex) {
+                System.err.println("Inventory insert failed: SQLState="+ex.getSQLState()
+                        +"  msg="+ex.getMessage());
+                throw ex;               // keep rollback behaviour unchanged
             }
 
             conn.commit();

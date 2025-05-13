@@ -19,5 +19,6 @@ public class HealthCheck implements HttpFunction {
             resp.setStatusCode(500);
             resp.getWriter().write("{\"status\":\"error\",\"msg\":\"" + e.getMessage() + "\"}");
         }
+        return 0;
     }
 }

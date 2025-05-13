@@ -38,4 +38,5 @@ public class ItemTypeInfo {
     public String getTexturePath() { return texturePath; }
     public boolean isStackable()   { return stackable; }
     public int     getMaxStack()   { return maxStack; }
+
 }

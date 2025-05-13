@@ -38,5 +38,6 @@ public class renewShop implements HttpFunction {
                     "details",  e.getMessage()
             )));
         }
+        return 0;
     }
 }

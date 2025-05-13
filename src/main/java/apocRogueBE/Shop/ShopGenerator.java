@@ -29,8 +29,8 @@ public class ShopGenerator {
     private static final Gson GSON = new Gson();
 
     /*────────────────────────────────  Static data  ────────────────────────────────*/
-    private static final Map<String, WeaponData> WEAPON_MAP = loadWeaponData();
-    private static final ItemTypeRegistry        ITEM_REGISTRY    = loadItemRegistry();
+    public static final Map<String, WeaponData> WEAPON_MAP = loadWeaponData();
+    public static final ItemTypeRegistry        ITEM_REGISTRY    = loadItemRegistry();
     private static final ItemTypeRegistry        POTION_REGISTRY  = loadPotionRegistry();
 
     /*────────────────────────────────  Public API  ────────────────────────────────*/
@@ -127,7 +127,7 @@ public class ShopGenerator {
     }
 
     /*────────────────────────────────  Helpers  ────────────────────────────────*/
-    private static Map<String, Integer> rollWeaponStats(Random rng, WeaponData wd) {
+    public static Map<String, Integer> rollWeaponStats(Random rng, WeaponData wd) {
         Map<String, Integer> m = new HashMap<>();
         for (String key : StatKeys.ALL) {
             int base = wd.getStat(key);

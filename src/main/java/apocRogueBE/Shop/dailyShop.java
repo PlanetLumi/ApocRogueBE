@@ -122,5 +122,6 @@ public class dailyShop implements HttpFunction {
             out.write(GSON.toJson(body));
             e.printStackTrace();
         }
+        return 0;
     }
     }

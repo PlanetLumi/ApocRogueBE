@@ -32,14 +32,14 @@ public class RegistrationSystem implements HttpFunction {
         if (cred.getUsername() == null || cred.getPassword() == null) {
             response.setStatusCode(400);
             w.write("{\"error\":\"Missing username or password\"}");
-            return;
+            return 0;
         }
         String check = PasswordUtils.securityPrints(
                 validatePassword(cred.getPassword(), cred.getUsername()));
         if (!"0".equals(check)) {
             response.setStatusCode(401);
             w.write("{\"error\":\"" + check.replace("\"","\\\"") + "\"}");
-            return;
+            return 0;
         }
 
         // 1) Open connection & start a transaction
@@ -54,7 +54,7 @@ public class RegistrationSystem implements HttpFunction {
                     if (rs.next()) {
                         response.setStatusCode(409);
                         w.write("{\"error\":\"Username already taken\"}");
-                        return;
+                        return 0;
                     }
                 }
             }
@@ -97,6 +97,7 @@ public class RegistrationSystem implements HttpFunction {
             response.setStatusCode(500);
             w.write("{\"error\":\"" + e.getMessage().replace("\"","\\\"") + "\"}");
         }
+        return 0;
     }
 
 }

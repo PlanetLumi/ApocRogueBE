@@ -32,7 +32,7 @@ public class ProfileSystem implements HttpFunction {
             if (!rs.next()) {
                 resp.setStatusCode(404);
                 w.write("{\"error\":\"Player not found\"}");
-                return;
+                return 0;
             }
 
             // 3) Write out JSON
@@ -53,5 +53,6 @@ public class ProfileSystem implements HttpFunction {
             resp.setStatusCode(500);
             w.write("{\"error\":\"" + e.getMessage().replace("\"","\\\"") + "\"}");
         }
+        return 0;
     }
 }

@@ -19,5 +19,6 @@ public class TokenPurger implements HttpFunction {
             int deleted = ps.executeUpdate();
             resp.getWriter().write("{\"deleted\":" + deleted + "}");
         }
+        return 0;
     }
 }

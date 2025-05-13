@@ -43,7 +43,7 @@ public class MarketSell implements HttpFunction {
                     if (!rs.next() || rs.getInt("quantity") < 1) {
                         resp.setStatusCode(400);
                         w.write("{\"error\":\"Not enough items to sell\"}");
-                        return;
+                        return 0;
                     }
                 }
             }
@@ -71,7 +71,7 @@ public class MarketSell implements HttpFunction {
                     w.write(gson.toJson(
                             Map.of("listingID", listingId,
                                     "status",    "LISTED")));
-                    return;
+                    return listingId;
                 }
             }
 
@@ -79,5 +79,6 @@ public class MarketSell implements HttpFunction {
             resp.setStatusCode(500);
             w.write("{\"error\":\""+e.getMessage().replace("\"","\\\"")+"\"}");
         }
+        return 0;
     }
 }

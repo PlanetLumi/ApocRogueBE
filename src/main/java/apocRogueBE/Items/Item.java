@@ -40,11 +40,7 @@ public class Item {
     public int getMaxStack()        { return maxStack; }
     public Map<String,Integer> getStats() { return stats; }
 
-    /**
-     * Use behavior should be implemented in game client-side logic.
-     */
-    public void use() {
-        // No-op in BE; client handles actual item usage.
-    }
+
+
 }
 

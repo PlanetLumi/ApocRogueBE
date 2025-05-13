@@ -47,6 +47,8 @@ public class LevelItemGenerate implements HttpFunction {
         public int    subLevel;     // 1‑5 inside that tier
         public int    radiation;    // 0‑100 env bonus
         public int    count;        // how many drops to roll (1‑5 recommended)
+        public float  chestX;
+        public float  chestY;
     }
     static class GenerateResponse {
         public String               itemCode;
@@ -70,7 +72,11 @@ public class LevelItemGenerate implements HttpFunction {
         int drops = Math.max(1, Math.min(g.count, 5));
 
         /* 3 ── deterministic seed */
-        long seed = hashSeed(g.difficulty, g.subLevel, g.radiation, LocalDate.now().toString());
+        long seed = hashSeed(
+                            g.difficulty, g.subLevel, g.radiation,
+                            LocalDate.now().toString(),
+                            g.chestX, g.chestY
+                                );
         Random rng = new Random(seed);
 
         List<GenerateResponse> loot = new ArrayList<>();
@@ -86,7 +92,6 @@ public class LevelItemGenerate implements HttpFunction {
                     WeaponData wd = WEAPON_MAP.get(wType);
                     Map<String,Integer> rolled = rollWeaponStats(rng, wd, g.difficulty, g.radiation);
                     String code = WeaponIDEncoder.encode(wType, g.difficulty, g.subLevel, rolled);
-                    persistAndAdd(conn, playerId, loot, code, rolled);
 
                 } else {
                     /* ‑‑‑ Item / consumable branch ‑‑‑ */
@@ -94,7 +99,6 @@ public class LevelItemGenerate implements HttpFunction {
                     ItemTypeInfo info = ITEM_TYPES().get(iType);
                     Map<String,Integer> rolled = rollItemStats(rng, info, g.difficulty, g.radiation);
                     String code = ItemIDEncoder.encode(iType, rolled);
-                    persistAndAdd(conn, playerId, loot, code, rolled);
                 }
             }
         }
@@ -138,28 +142,15 @@ public class LevelItemGenerate implements HttpFunction {
         return m;
     }
 
-    /* ─────────── helper: persist + add to JSON list ───────────────────── */
-    private void persistAndAdd(Connection conn, int playerId, List<GenerateResponse> list,
-                               String code, Map<String,Integer> rolled) throws Exception {
-        try (PreparedStatement ps = conn.prepareStatement(
-                "INSERT INTO Inventory(playerID,itemCode,quantity) " +
-                        "VALUES (?,?,1) ON DUPLICATE KEY UPDATE quantity = quantity+1")) {
-            ps.setInt(1,  playerId);
-            ps.setString(2, code);
-            ps.executeUpdate();
-        }
-        GenerateResponse r = new GenerateResponse();
-        r.itemCode = code;
-        r.stats    = rolled;
-        list.add(r);
-    }
 
     /* ─────────── deterministic seed mixer ─────────────────────────────── */
-    private long hashSeed(int d,int s,int r,String date){
+    private long hashSeed(int d, int s, int r, String date, float x, float y){
         long h = 1125899906842597L; // prime seed
         h = 31*h + d;
         h = 31*h + s;
         h = 31*h + r;
+        h = (long) (31*h + x);
+        h = (long) (31*h + y);
         h = 31*h + date.hashCode();
         return h;
     }

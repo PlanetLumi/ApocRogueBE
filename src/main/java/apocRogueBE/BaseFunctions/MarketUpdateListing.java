@@ -40,7 +40,7 @@ public class MarketUpdateListing implements HttpFunction {
                 if (!rs.next() || rs.getInt("playerID") != seller) {
                     resp.setStatusCode(403);
                     w.write("{\"error\":\"Not your listing\"}");
-                    return 0;
+                    return;
                 }
             }
 
@@ -69,6 +69,5 @@ public class MarketUpdateListing implements HttpFunction {
             c.commit();
             w.write("{\"status\":\"UPDATED\"}");
         }
-        return 0;
     }
 }

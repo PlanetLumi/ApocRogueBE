@@ -41,12 +41,12 @@ public class InventoryPush implements HttpFunction {
         } catch(Exception e) {
             resp.setStatusCode(400);
             w.write(gson.toJson(Map.of("error","Malformed JSON")));
-            return 0;
+            return;
         }
         if (push == null || push.inventory == null) {
             resp.setStatusCode(400);
             w.write(gson.toJson(Map.of("error","`inventory` field is required")));
-            return 0;
+            return;
         }
 
         // 2) auth & DB
@@ -58,7 +58,7 @@ public class InventoryPush implements HttpFunction {
                 // missing or invalid JWT
                 resp.setStatusCode(401);
                 w.write(gson.toJson(Map.of("error","Unauthorized")));
-                return 0;
+                return;
             }
 
             conn.setAutoCommit(false);
@@ -91,6 +91,5 @@ public class InventoryPush implements HttpFunction {
             resp.setStatusCode(500);
             w.write(gson.toJson(Map.of("error", ex.getMessage())));
         }
-        return 0;
     }
 }

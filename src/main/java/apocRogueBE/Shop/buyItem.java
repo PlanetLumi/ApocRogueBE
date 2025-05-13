@@ -28,8 +28,7 @@ public class buyItem implements HttpFunction {
             /* 1 ── parse JSON */
             BuyReq br = GSON.fromJson(req.getReader(), BuyReq.class);
             if (br==null||br.sellerID()==null||br.itemCode()==null||br.count()<1) {
-                resp.setStatusCode(400); out.write("{\"error\":\"bad json\"}");
-                return 0;
+                resp.setStatusCode(400); out.write("{\"error\":\"bad json\"}"); return;
             }
 
             /* 2 ── auth */
@@ -46,8 +45,7 @@ public class buyItem implements HttpFunction {
                     .findFirst()
                     .orElse(null);
             if (wanted == null) {
-                resp.setStatusCode(400); out.write("{\"error\":\"item not in today\\'s shop\"}");
-                return seed;
+                resp.setStatusCode(400); out.write("{\"error\":\"item not in today\\'s shop\"}"); return;
             }
             int totalCost = wanted.getPrice() * br.count();
 
@@ -67,9 +65,7 @@ public class buyItem implements HttpFunction {
                             " FROM Player WHERE playerID=? FOR UPDATE")) {
                 ps.setInt(1, playerId);
                 try (ResultSet rs = ps.executeQuery()) {
-                    if (!rs.next()) { conn.rollback(); resp.setStatusCode(500);
-                        return seed;
-                    }
+                    if (!rs.next()) { conn.rollback(); resp.setStatusCode(500); return; }
                     gold = rs.getInt("playerCoin");
                 }
             }
@@ -77,7 +73,7 @@ public class buyItem implements HttpFunction {
                 conn.rollback();
                 resp.setStatusCode(402);
                 out.write("{\"error\":\"not enough coin\"}");
-                return seed;
+                return;
             }
 
             /* ---------- 5 ── debit coin and add to amountSpentX ---------- */
@@ -132,6 +128,5 @@ public class buyItem implements HttpFunction {
             resp.setStatusCode(200);
             out.write("{\"status\":\"OK\",\"goldLeft\":"+(gold-totalCost)+"}");
         }
-        return 0;
     }
 }

@@ -43,7 +43,7 @@ public class MarketBuy implements HttpFunction {
                     if (!rs.next()) {
                         resp.setStatusCode(404);
                         w.write("{\"error\":\"Listing not found\"}");
-                        return sellerId;
+                        return;
                     }
                     sellerId = rs.getInt("playerID");
                     itemCode = rs.getString("itemCode");
@@ -60,7 +60,7 @@ public class MarketBuy implements HttpFunction {
                     if (rs.getLong("playerCoin") < price) {
                         resp.setStatusCode(400);
                         w.write("{\"error\":\"Insufficient balance\"}");
-                        return sellerId;
+                        return;
                     }
                 }
             }
@@ -102,6 +102,5 @@ public class MarketBuy implements HttpFunction {
             resp.setStatusCode(500);
             w.write("{\"error\":\""+e.getMessage().replace("\"","\\\"")+"\"}");
         }
-        return 0;
     }
 }

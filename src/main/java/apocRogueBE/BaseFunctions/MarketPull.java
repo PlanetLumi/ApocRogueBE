@@ -86,6 +86,5 @@ public class MarketPull implements HttpFunction {
 
             w.write(gson.toJson(rows));
         }
-        return 0;
     }
 }

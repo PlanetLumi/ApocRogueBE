@@ -45,7 +45,7 @@ public class LoginSystem implements HttpFunction {
                 if (!rs.next()) {
                     resp.setStatusCode(401);
                     w.write("{\"authenticated\":false}");
-                    return 0;
+                    return;
                 }
                 playerId  = rs.getInt("playerID");
                 storedHash = rs.getString("password");
@@ -56,7 +56,7 @@ public class LoginSystem implements HttpFunction {
             if (!ok) {
                 resp.setStatusCode(401);
                 w.write("{\"authenticated\":false}");
-                return 0;
+                return;
             }
 
             // 3) Generate a session token
@@ -91,6 +91,5 @@ public class LoginSystem implements HttpFunction {
                     e.getMessage().replace("\"","\\\"") +
                     "\"}");
         }
-        return 0;
     }
 }

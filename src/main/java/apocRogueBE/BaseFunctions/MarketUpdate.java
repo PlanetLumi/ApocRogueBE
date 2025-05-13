@@ -27,6 +27,5 @@ public class MarketUpdate implements HttpFunction {
             int deleted = ps.executeUpdate();
             w.write(gson.toJson(Map.of("deleted", deleted)));
         }
-        return 0;
     }
 }

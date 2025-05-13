@@ -30,7 +30,7 @@ public class InventoryPull implements HttpFunction {
         } catch (Exception e) {
             resp.setStatusCode(401);
             w.write(gson.toJson(Map.of("error","Unauthorized")));
-            return 0;
+            return;
         }
 
         // 2) Query
@@ -56,12 +56,11 @@ public class InventoryPull implements HttpFunction {
         } catch (Exception e) {
             resp.setStatusCode(500);
             w.write(gson.toJson(Map.of("error", e.getMessage())));
-            return 0;
+            return;
         }
 
         // 3) Write once
         resp.setStatusCode(200);
         w.write(gson.toJson(out));
-        return 0;
     }
 }

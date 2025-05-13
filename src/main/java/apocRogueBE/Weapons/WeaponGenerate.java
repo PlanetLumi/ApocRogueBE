@@ -69,7 +69,7 @@ public class WeaponGenerate implements HttpFunction {
         } catch (Exception e) {
             resp.setStatusCode(401);
             w.write(gson.toJson(Map.of("error","Unauthorized")));
-            return 0;
+            return;
         }
 
         // 2) Parse JSON body
@@ -79,7 +79,7 @@ public class WeaponGenerate implements HttpFunction {
         } catch (Exception e) {
             resp.setStatusCode(400);
             w.write(gson.toJson(Map.of("error","Malformed JSON")));
-            return 0;
+            return;
         }
 
         // 3) Build baseValues map (you’ll need somewhere—DB table or in-code map—to look up each weapon’s “base” stats)
@@ -111,7 +111,6 @@ public class WeaponGenerate implements HttpFunction {
         // 7) Return
         resp.setStatusCode(200);
         w.write(gson.toJson(out));
-        return 0;
     }
 
     private Map<String,Integer> loadBaseStatsFor(String typeID) {

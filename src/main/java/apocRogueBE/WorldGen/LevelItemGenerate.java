@@ -19,7 +19,13 @@ import java.sql.PreparedStatement;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
-
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.BlobId;
+import com.google.cloud.storage.BlobInfo;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
+import java.nio.charset.StandardCharsets;
+import com.google.gson.reflect.TypeToken;
 /* gain access to WEAPON_MAP that ShopGenerator already builds */
 import static apocRogueBE.Shop.ShopGenerator.WEAPON_MAP;
 
@@ -112,7 +118,33 @@ public class LevelItemGenerate implements HttpFunction {
                 }
             }
         }
+        String bucketName = "LOOT_BUCKET";      // set this in your Function’s env
+        Storage storage   = StorageOptions.getDefaultInstance().getService();
 
+        String date       = LocalDate.now().toString();
+        String blobName   = String.format("levelLoot/%d_%d_%s.json",
+                g.difficulty, g.subLevel, date);
+
+        List<GenerateResponse> allDrops;
+        BlobId blobId     = BlobId.of(bucketName, blobName);
+        Blob blob         = storage.get(blobId);
+        if (blob != null) {
+            String oldJson = new String(blob.getContent(), StandardCharsets.UTF_8);
+            allDrops = GSON.fromJson(
+                    oldJson,
+                    new TypeToken<List<GenerateResponse>>(){}.getType()
+            );
+        } else {
+            allDrops = new ArrayList<>();
+        }
+
+        allDrops.addAll(loot);
+
+        String newJson = GSON.toJson(allDrops);
+        BlobInfo info   = BlobInfo.newBuilder(blobId)
+                .setContentType("application/json")
+                .build();
+        storage.create(info, newJson.getBytes(StandardCharsets.UTF_8));
         out.write(GSON.toJson(loot));
     }
 

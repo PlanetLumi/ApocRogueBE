@@ -95,12 +95,12 @@ public class ShopGenerator {
     }
 
     private static ItemTypeRegistry loadItemRegistry() {
-        final String PATH = "resources/Items/items.json";
+        final String PATH = "Items/item.json";
         return loadRegistryFromJson(PATH);
     }
 
     private static ItemTypeRegistry loadPotionRegistry() {
-        final String PATH = "resources/Items/potion.json";
+        final String PATH = "Items/potion.json";
         return loadRegistryFromJson(PATH);
     }
 

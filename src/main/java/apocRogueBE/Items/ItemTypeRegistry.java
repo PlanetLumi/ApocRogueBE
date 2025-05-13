@@ -53,4 +53,7 @@ public class ItemTypeRegistry {
     public Set<String> getAllTypeIDs() {
         return infoByTypeID.keySet();
     }
+    public void register(String typeID, ItemTypeInfo info) {
+        infoByTypeID.put(typeID, info);
+    }
 }

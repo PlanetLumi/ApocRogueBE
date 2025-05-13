@@ -118,7 +118,7 @@ public class LevelItemGenerate implements HttpFunction {
                 }
             }
         }
-        String bucketName = "LOOT_BUCKET";      // set this in your Function’s env
+        String bucket = System.getenv("LOOT_BUCKET");
         Storage storage   = StorageOptions.getDefaultInstance().getService();
 
         String date       = LocalDate.now().toString();
@@ -126,7 +126,7 @@ public class LevelItemGenerate implements HttpFunction {
                 g.difficulty, g.subLevel, date);
 
         List<GenerateResponse> allDrops;
-        BlobId blobId     = BlobId.of(bucketName, blobName);
+        BlobId blobId     = BlobId.of(bucket, blobName);
         Blob blob         = storage.get(blobId);
         if (blob != null) {
             String oldJson = new String(blob.getContent(), StandardCharsets.UTF_8);

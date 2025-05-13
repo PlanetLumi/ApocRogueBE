@@ -25,7 +25,7 @@ public class ItemTypeRegistry {
      */
     public void load() {
         try (InputStream in = getClass().getClassLoader()
-                .getResourceAsStream("data/item_types.json");
+                .getResourceAsStream("Items/item-types.json");
              InputStreamReader reader = new InputStreamReader(in)) {
             JsonElement root = JsonParser.parseReader(reader);
             if (!root.isJsonObject()) throw new RuntimeException("Invalid item_types.json format");

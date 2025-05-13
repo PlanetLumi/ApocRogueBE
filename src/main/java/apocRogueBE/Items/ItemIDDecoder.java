@@ -34,13 +34,13 @@ public class ItemIDDecoder {
         List<String> keys = new ArrayList<>(ItemTypeInfo.STAT_KEYS);
         Collections.sort(keys);
 
-        if (statCount != keys.size()) {
-            throw new IllegalArgumentException("Stat count mismatch in ID: " + id);
+        if (statCount > keys.size()) {
+            throw new IllegalArgumentException("ID contains more stats than we know: " + id);
         }
-
         Map<String,Integer> stats = new LinkedHashMap<>();
         int pos = 0;
-        for (String key : keys) {
+        for (int i = 0; i < statCount; i++) {
+            String key = keys.get(i);
             int hi = fromHex(hexPart.charAt(pos++));
             int lo = fromHex(hexPart.charAt(pos++));
             stats.put(key, (hi << 4) + lo);

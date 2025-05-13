@@ -1,8 +1,10 @@
 package apocRogueBE.Shop;
 
+import apocRogueBE.Items.ItemIDDecoder;
 import apocRogueBE.Items.ItemTypeInfo;
 import apocRogueBE.Items.ItemTypeRegistry;
 import apocRogueBE.Weapons.WeaponData;
+import apocRogueBE.Weapons.WeaponIDDecoder;
 import com.google.cloud.functions.*;
 import com.google.gson.Gson;
 import apocRogueBE.SingletonConnection.DataSourceSingleton;
@@ -68,6 +70,11 @@ public class dailyShop implements HttpFunction {
             for (ShopItem it : base) {
                 ShopEntry e = new ShopEntry();
                 e.itemCode  = it.getCode();
+                if (weaponSeller) {
+                    e.stats = WeaponIDDecoder.decode(e.itemCode).stats;
+                } else {
+                    e.stats = ItemIDDecoder.decode(e.itemCode).stats;
+                }
                 e.typeID    = it.getCode().substring(2,4);
                 e.price     = it.getPrice();
                 e.remaining = Math.max(0, it.getBaseStock()

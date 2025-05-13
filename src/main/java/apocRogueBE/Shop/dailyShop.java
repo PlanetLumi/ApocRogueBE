@@ -58,14 +58,16 @@ public class dailyShop implements HttpFunction {
             // DTO conversion
             List<ShopEntry> entries = new ArrayList<>();
             for (ShopItem it : base) {
-                int remaining = Math.max(0, it.getBaseStock()
-                        - bought.getOrDefault(it.getCode(), 0));
-                entries.add(new ShopEntry() {{
-                    itemCode  = it.getCode();
-                    typeID    = it.getCode().substring(2, 4);
-                    price     = it.getPrice();
-                    remaining = remaining;
-                }});
+                int remaining = Math.max(0,
+                        it.getBaseStock() - bought.getOrDefault(it.getCode(), 0));
+
+                ShopEntry e = new ShopEntry();
+                e.itemCode  = it.getCode();
+                e.typeID    = it.getCode().substring(2, 4);
+                e.price     = it.getPrice();
+                e.remaining = remaining;
+
+                entries.add(e);                // ← a real ShopEntry, not null
             }
 
             SellerConfig.Seller cfg = SellerConfig.get(sellerId);

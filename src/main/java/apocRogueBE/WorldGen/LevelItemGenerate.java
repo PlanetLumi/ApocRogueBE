@@ -92,6 +92,10 @@ public class LevelItemGenerate implements HttpFunction {
                     WeaponData wd = WEAPON_MAP.get(wType);
                     Map<String,Integer> rolled = rollWeaponStats(rng, wd, g.difficulty, g.radiation);
                     String code = WeaponIDEncoder.encode(wType, g.difficulty, g.subLevel, rolled);
+                    GenerateResponse gr = new GenerateResponse();
+                    gr.itemCode = code;
+                    gr.stats    = rolled;
+                    loot.add(gr);
 
                 } else {
                     /* ‑‑‑ Item / consumable branch ‑‑‑ */
@@ -99,6 +103,10 @@ public class LevelItemGenerate implements HttpFunction {
                     ItemTypeInfo info = ITEM_TYPES().get(iType);
                     Map<String,Integer> rolled = rollItemStats(rng, info, g.difficulty, g.radiation);
                     String code = ItemIDEncoder.encode(iType, rolled);
+                    GenerateResponse gr = new GenerateResponse();
+                    gr.itemCode = code;
+                    gr.stats    = rolled;
+                    loot.add(gr);
                 }
             }
         }
@@ -143,7 +151,7 @@ public class LevelItemGenerate implements HttpFunction {
     }
 
 
-    /* ─────────── deterministic seed mixer ─────────────────────────────── */
+    /* ─────────── seed mixer ─────────────────────────────── */
     private long hashSeed(int d, int s, int r, String date, float x, float y){
         long h = 1125899906842597L; // prime seed
         h = 31*h + d;

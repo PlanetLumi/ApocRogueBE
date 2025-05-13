@@ -76,7 +76,7 @@ public class ShopGenerator {
     }
 
     /*────────────────────────────────  Loaders  ────────────────────────────────*/
-    private static Map<String, WeaponData> loadWeaponData() {
+    public static Map<String, WeaponData> loadWeaponData() {
         final String PATH = "Weapons/items.json";
         try (InputStream raw = Objects.requireNonNull(
                 ShopGenerator.class.getClassLoader().getResourceAsStream(PATH),
@@ -94,18 +94,18 @@ public class ShopGenerator {
         }
     }
 
-    private static ItemTypeRegistry loadItemRegistry() {
+    public static ItemTypeRegistry loadItemRegistry() {
         final String PATH = "Items/item.json";
         return loadRegistryFromJson(PATH);
     }
 
-    private static ItemTypeRegistry loadPotionRegistry() {
+    public static ItemTypeRegistry loadPotionRegistry() {
         final String PATH = "Items/potion.json";
         return loadRegistryFromJson(PATH);
     }
 
     /** Helper that deserialises a JSON array of {@link ItemTypeInfo} into a registry. */
-    private static ItemTypeRegistry loadRegistryFromJson(String path) {
+    public static ItemTypeRegistry loadRegistryFromJson(String path) {
         try (InputStream raw = Objects.requireNonNull(
                 ShopGenerator.class.getClassLoader().getResourceAsStream(path),
                 "Resource not found on class-path: " + path);

@@ -1,5 +1,8 @@
 package apocRogueBE.Shop;
 
+import apocRogueBE.Items.ItemTypeInfo;
+import apocRogueBE.Items.ItemTypeRegistry;
+import apocRogueBE.Weapons.WeaponData;
 import com.google.cloud.functions.*;
 import com.google.gson.Gson;
 import apocRogueBE.SingletonConnection.DataSourceSingleton;
@@ -12,42 +15,42 @@ import java.time.LocalDate;
 import java.util.*;
 
 public class dailyShop implements HttpFunction {
-    private static final Gson   GSON    = new Gson();
+    private static final Gson GSON = new Gson();
     private static final String VERSION = "v1";
-    private static final String SECRET  = System.getenv("SHOP_SALT");
+    private static final String SECRET = System.getenv("SHOP_SALT");
 
     @Override
     public void service(HttpRequest req, HttpResponse resp) throws Exception {
         resp.setContentType("application/json");
-
-        /* ────────────────────────────────
-         *  Single writer for the *entire* request.
-         *  The servlet container will close it
-         *  automatically when service() returns.
-         * ──────────────────────────────── */
-        BufferedWriter out = resp.getWriter();
+        BufferedWriter out = resp.getWriter();             // keep writer open for whole request
 
         try (Connection conn = DataSourceSingleton.getConnection()) {
-            int    playerId = AuthHelper.requirePlayerId(req, conn);
+
+            /*────────────────  1 ── identify caller & seller  ────────────────*/
+            int playerId = AuthHelper.requirePlayerId(req, conn);
+
             String sellerId = req.getFirstQueryParameter("seller")
                     .orElseThrow(() -> new IllegalArgumentException("Missing seller"));
 
-            // deterministic RNG
-            String today = LocalDate.now().toString();
-            long   seed  = Objects.hash(playerId, sellerId, today, VERSION, SECRET);
-            Random rng   = new Random(seed);
+            boolean potionSeller = "A".equalsIgnoreCase(sellerId);
+            boolean weaponSeller = "C".equalsIgnoreCase(sellerId);
+            // anything else ( "B" today) is a general-item seller
 
-            // roll base inventory
+            /*────────────────  2 ── deterministic RNG for this day  ───────────*/
+            String today = LocalDate.now().toString();
+            long seed = Objects.hash(playerId, sellerId, today, VERSION, SECRET);
+            Random rng = new Random(seed);
+
+            /*────────────────  3 ── generate base shop & fetch past purchases ‐‐*/
             List<ShopItem> base = ShopGenerator.generateShop(rng, sellerId, playerId);
 
-            // previously-bought quantities
-            Map<String,Integer> bought = new HashMap<>();
+            Map<String, Integer> bought = new HashMap<>();
             String sql = """
-              SELECT item_code, quantity
-                FROM ShopPurchase
-               WHERE player_id=? AND seller_id=? AND shop_date=?""";
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setInt   (1, playerId);
+          
+                    SELECT item_code, quantity
+            FROM ShopPurchase
+           WHERE player_id=? AND seller_id=? AND shop_date=?""";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {ps.setInt   (1, playerId);
                 ps.setString(2, sellerId);
                 ps.setDate  (3, Date.valueOf(today));
                 try (ResultSet rs = ps.executeQuery()) {
@@ -55,21 +58,36 @@ public class dailyShop implements HttpFunction {
                 }
             }
 
-            // DTO conversion
+            /*────────────────  4 ── build DTO entries with names & icons  ─────*/
+            ItemTypeRegistry items   = ShopGenerator.loadItemRegistry();
+            ItemTypeRegistry potions = ShopGenerator.loadPotionRegistry();
+            Map<String,WeaponData> weapons = ShopGenerator.loadWeaponData();
+
             List<ShopEntry> entries = new ArrayList<>();
             for (ShopItem it : base) {
-                int remaining = Math.max(0,
-                        it.getBaseStock() - bought.getOrDefault(it.getCode(), 0));
-
                 ShopEntry e = new ShopEntry();
                 e.itemCode  = it.getCode();
                 e.typeID    = it.getCode().substring(2, 4);
                 e.price     = it.getPrice();
-                e.remaining = remaining;
+                e.remaining = Math.max(0, it.getBaseStock()
+                        - bought.getOrDefault(it.getCode(), 0));
 
-                entries.add(e);                // ← a real ShopEntry, not null
+                if (weaponSeller) {
+                    WeaponData wd = Objects.requireNonNull(weapons.get(e.typeID),
+                            "Unknown weapon typeID " + e.typeID);
+                    e.name        = wd.name;
+                    e.texturePath = wd.texturePath;
+                } else {
+                    ItemTypeRegistry reg = potionSeller ? potions : items;
+                    ItemTypeInfo info   = Objects.requireNonNull(reg.getByTypeID(e.typeID),
+                            "Unknown item typeID " + e.typeID);
+                    e.name        = info.getName();
+                    e.texturePath = info.getTexturePath();
+                }
+                entries.add(e);
             }
 
+            /*────────────────  5 ── wrap in SellerInfo and serialize  ─────────*/
             SellerConfig.Seller cfg = SellerConfig.get(sellerId);
 
             io.github.apocRogue.dto.SellerInfo dto = new io.github.apocRogue.dto.SellerInfo();
@@ -82,19 +100,18 @@ public class dailyShop implements HttpFunction {
             resp.setStatusCode(200);
             out.write(GSON.toJson(dto));
 
-        } catch (IllegalArgumentException iae) {
+        } catch (IllegalArgumentException iae) {          // bad request
             resp.setStatusCode(400);
             out.write(GSON.toJson(Map.of("error", iae.getMessage())));
 
-        } catch (Exception e) {
+        } catch (Exception e) {                           // anything else
             resp.setStatusCode(500);
             Map<String,Object> body = new HashMap<>();
-            body.put("error",   "Could not build shop");
+            body.put("error", "Could not build shop");
             body.put("details", Optional.ofNullable(e.getMessage())
                     .orElse(e.getClass().getName()));
             out.write(GSON.toJson(body));
-            e.printStackTrace();          // surface full stack in Cloud Logs
+            e.printStackTrace();
         }
-        /* no explicit out.close(); container handles it */
     }
-}
+    }

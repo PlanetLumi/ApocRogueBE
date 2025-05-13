@@ -141,4 +141,4 @@ public class ShopGenerator {
         // simple: sum all rolled stats × a factor
         return rolled.values().stream().mapToInt(Integer::intValue).sum() * 2;
     }
-}
+}//

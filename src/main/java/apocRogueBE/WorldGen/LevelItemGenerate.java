@@ -157,7 +157,7 @@ public class LevelItemGenerate implements HttpFunction {
 
     /* ─────────── helper: choose any item id from registry ─────────────── */
     private String pickItemTypeForLevel(Random rng) {
-        List<String> ids = (List<String>) ITEM_REGISTRY.getAllTypeIDs();
+        List<String> ids = new ArrayList<>(ITEM_TYPES().keySet());
         return ids.get(rng.nextInt(ids.size()));
     }
 

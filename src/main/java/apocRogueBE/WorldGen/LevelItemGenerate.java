@@ -42,6 +42,7 @@ public class LevelItemGenerate implements HttpFunction {
 
     private static final ItemTypeRegistry ITEM_REGISTRY = new ItemTypeRegistry();
     static { ITEM_REGISTRY.load(); }
+    private static final String BUCKET_ENV = "LOOT_BUCKET";
 
     private static Map<String, ItemTypeInfo> ITEM_TYPES() {
         return ITEM_REGISTRY.getAllTypeIDs().stream()
@@ -118,7 +119,7 @@ public class LevelItemGenerate implements HttpFunction {
                 }
             }
         }
-        String bucketName = "LOOT_BUCKET";      // set this in your Function’s env
+        String bucketName = System.getenv(BUCKET_ENV);
         Storage storage   = StorageOptions.getDefaultInstance().getService();
 
         String date       = LocalDate.now().toString();

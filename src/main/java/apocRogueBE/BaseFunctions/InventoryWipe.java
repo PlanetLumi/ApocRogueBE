@@ -67,10 +67,10 @@ public class InventoryWipe implements HttpFunction {
             conn.setAutoCommit(false);
 
             // Prepare statements: decrement if >1, otherwise delete
-            String updateSql = "UPDATE Inventory SET count = count - 1"
-                    + " WHERE playerID = ? AND itemCode = ? AND count > 1";
+            String updateSql = "UPDATE Inventory SET quantity = quantity - 1"
+                    + " WHERE playerID = ? AND itemCode = ? AND quantity > 1";
             String deleteSql = "DELETE FROM Inventory"
-                    + " WHERE playerID = ? AND itemCode = ? AND count <= 1";
+                    + " WHERE playerID = ? AND itemCode = ? AND quantity <= 1";
 
             try (PreparedStatement updatePs = conn.prepareStatement(updateSql);
                  PreparedStatement deletePs = conn.prepareStatement(deleteSql)) {

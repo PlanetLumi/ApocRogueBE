@@ -68,7 +68,7 @@ public class InventoryWipe implements HttpFunction {
         // 2) Authenticate user and open DB connection
 
             conn.setAutoCommit(false);
-
+            System.out.println(payload.inventory);
             // 3) Prepare deletion statement
             String sql = "DELETE FROM Inventory WHERE playerID = ? AND itemCode = ?";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {

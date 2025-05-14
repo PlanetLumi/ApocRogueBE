@@ -22,6 +22,7 @@ public class InventoryWipe implements HttpFunction {
      * Represents each inventory item to wipe. Matches InventoryPush.ItemEntry structure.
      */
     static class ItemEntry {
+        String itemCode;        // add this
         String typeID;
         int    skullLevel;
         int    skullSub;
@@ -82,7 +83,7 @@ public class InventoryWipe implements HttpFunction {
                             item.stats
                     );
                     ps.setInt(1, playerId);
-                    ps.setString(2, code);
+                    ps.setString(2, item.itemCode);
                     System.out.println(
                             "Deleting Inventory → playerID=%d, itemCode='%s'%n" +
                             playerId + code

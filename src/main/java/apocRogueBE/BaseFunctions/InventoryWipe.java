@@ -72,6 +72,7 @@ public class InventoryWipe implements HttpFunction {
             // 3) Prepare deletion statement
             String sql = "DELETE FROM Inventory WHERE playerID = ? AND itemCode = ?";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                System.out.println(ps);
                 for (ItemEntry item : payload.inventory) {
                     // Encode server-side ID to match stored codes
                     String code = WeaponIDEncoder.encode(
@@ -83,6 +84,7 @@ public class InventoryWipe implements HttpFunction {
                     ps.setInt(1, playerId);
                     ps.setString(2, code);
                     ps.addBatch();
+                    System.out.println(ps);
                 }
                 ps.executeBatch();
             }

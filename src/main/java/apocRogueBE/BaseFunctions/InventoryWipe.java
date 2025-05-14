@@ -40,6 +40,15 @@ public class InventoryWipe implements HttpFunction {
     public void service(HttpRequest req, HttpResponse resp) throws Exception {
         resp.setContentType("application/json");
         BufferedWriter writer = resp.getWriter();
+        try (Connection conn = DataSourceSingleton.getConnection()) {
+            final int playerId;
+            try {
+                playerId = AuthHelper.requirePlayerId(req, conn);
+            } catch (Exception authEx) {
+                resp.setStatusCode(401);
+                writer.write(gson.toJson(Map.of("error", "Unauthorized")));
+                return;
+            }
 
         // 1) Parse and validate JSON payload
         WipeRequest payload;
@@ -57,15 +66,6 @@ public class InventoryWipe implements HttpFunction {
         }
 
         // 2) Authenticate user and open DB connection
-        try (Connection conn = DataSourceSingleton.getConnection()) {
-            final int playerId;
-            try {
-                playerId = AuthHelper.requirePlayerId(req, conn);
-            } catch (Exception authEx) {
-                resp.setStatusCode(401);
-                writer.write(gson.toJson(Map.of("error", "Unauthorized")));
-                return;
-            }
 
             conn.setAutoCommit(false);
 

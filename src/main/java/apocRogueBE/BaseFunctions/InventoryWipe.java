@@ -83,9 +83,9 @@ public class InventoryWipe implements HttpFunction {
                     );
                     ps.setInt(1, playerId);
                     ps.setString(2, code);
-                    System.out.printf(
-                            "Deleting Inventory → playerID=%d, itemCode='%s'%n",
-                            playerId, code
+                    System.out.println(
+                            "Deleting Inventory → playerID=%d, itemCode='%s'%n" +
+                            playerId + code
                     );
                     ps.addBatch();
                     System.out.println(ps);

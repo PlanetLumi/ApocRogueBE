@@ -93,7 +93,7 @@ public class InventoryWipe implements HttpFunction {
                 }
                 ps.executeBatch();
             }
-
+//
             conn.commit();
             resp.setStatusCode(200);
             writer.write(gson.toJson(Map.of("status", "OK")));

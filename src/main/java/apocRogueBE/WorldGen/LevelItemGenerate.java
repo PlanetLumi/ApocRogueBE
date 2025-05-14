@@ -81,7 +81,7 @@ public class LevelItemGenerate implements HttpFunction {
 
         // 5) persist each generated code to SQL table `world_loot`
         try (Connection conn = DataSourceSingleton.getConnection()) {
-            String sql = "INSERT INTO world_loot(player_id, item_code) VALUES (?, ?) ON CONFLICT DO NOTHING";
+            String sql = "INSERT INTO world_loot(player_id, item_code) VALUES (?, ?)";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 for (GenerateResponse gr : loot) {
                     ps.setLong(1, playerId);

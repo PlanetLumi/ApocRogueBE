@@ -19,19 +19,15 @@ public class InventoryWipe implements HttpFunction {
     private static final Gson gson = new Gson();
 
     /**
-     * Represents each inventory item to wipe. Matches InventoryPush.ItemEntry structure.
+     * Represents each inventory item to wipe.
+     * Mirrors client payload; itemCode is passed verbatim.
      */
     static class ItemEntry {
-        String itemCode;        // add this
-        String typeID;
-        int    skullLevel;
-        int    skullSub;
-        Map<String,Integer> stats;
-        int    count; // count is optional here; used for consistency but not applied
+        String itemCode;
     }
 
     /**
-     * The expected JSON payload: { "inventory": [ ... ] }
+     * Expect JSON: { "inventory": [ { itemCode:..., count:... }, ... ] }
      */
     static class WipeRequest {
         List<ItemEntry> inventory;
@@ -41,17 +37,8 @@ public class InventoryWipe implements HttpFunction {
     public void service(HttpRequest req, HttpResponse resp) throws Exception {
         resp.setContentType("application/json");
         BufferedWriter writer = resp.getWriter();
-        try (Connection conn = DataSourceSingleton.getConnection()) {
-            final int playerId;
-            try {
-                playerId = AuthHelper.requirePlayerId(req, conn);
-            } catch (Exception authEx) {
-                resp.setStatusCode(401);
-                writer.write(gson.toJson(Map.of("error", "Unauthorized")));
-                return;
-            }
 
-        // 1) Parse and validate JSON payload
+        // Parse and validate
         WipeRequest payload;
         try {
             payload = gson.fromJson(req.getReader(), WipeRequest.class);
@@ -66,34 +53,42 @@ public class InventoryWipe implements HttpFunction {
             return;
         }
 
-        // 2) Authenticate user and open DB connection
+        // Authenticate and get DB connection
+        try (Connection conn = DataSourceSingleton.getConnection()) {
+            final int playerId;
+            try {
+                playerId = AuthHelper.requirePlayerId(req, conn);
+            } catch (Exception authEx) {
+                resp.setStatusCode(401);
+                writer.write(gson.toJson(Map.of("error", "Unauthorized")));
+                return;
+            }
 
             conn.setAutoCommit(false);
-            System.out.println(payload.inventory);
-            // 3) Prepare deletion statement
-            String sql = "DELETE FROM Inventory WHERE playerID = ? AND itemCode = ?";
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                System.out.println(ps);
+
+            // Prepare statements: decrement if >1, otherwise delete
+            String updateSql = "UPDATE Inventory SET count = count - 1"
+                    + " WHERE playerID = ? AND itemCode = ? AND count > 1";
+            String deleteSql = "DELETE FROM Inventory"
+                    + " WHERE playerID = ? AND itemCode = ? AND count <= 1";
+
+            try (PreparedStatement updatePs = conn.prepareStatement(updateSql);
+                 PreparedStatement deletePs = conn.prepareStatement(deleteSql)) {
                 for (ItemEntry item : payload.inventory) {
-                    // Encode server-side ID to match stored codes
-                    String code = WeaponIDEncoder.encode(
-                            item.typeID,
-                            item.skullLevel,
-                            item.skullSub,
-                            item.stats
-                    );
-                    ps.setInt(1, playerId);
-                    ps.setString(2, item.itemCode);
-                    System.out.println(
-                            "Deleting Inventory → playerID=%d, itemCode='%s'%n" +
-                            playerId + code
-                    );
-                    ps.addBatch();
-                    System.out.println(ps);
+                    // First try to decrement
+                    updatePs.setInt(1, playerId);
+                    updatePs.setString(2, item.itemCode);
+                    int updated = updatePs.executeUpdate();
+
+                    if (updated == 0) {
+                        // Either not found or count was 1: remove entirely
+                        deletePs.setInt(1, playerId);
+                        deletePs.setString(2, item.itemCode);
+                        deletePs.executeUpdate();
+                    }
                 }
-                ps.executeBatch();
             }
-//
+
             conn.commit();
             resp.setStatusCode(200);
             writer.write(gson.toJson(Map.of("status", "OK")));
@@ -104,9 +99,6 @@ public class InventoryWipe implements HttpFunction {
                     "error", "Database error",
                     "details", sqlEx.getMessage()
             )));
-        } catch (Exception ex) {
-            resp.setStatusCode(500);
-            writer.write(gson.toJson(Map.of("error", ex.getMessage())));
         }
     }
 }

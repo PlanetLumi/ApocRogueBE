@@ -22,7 +22,7 @@ public class MarketUpdate implements HttpFunction {
 
         try (Connection c = DataSourceSingleton.getConnection();
              PreparedStatement ps = c.prepareStatement(
-                     "DELETE FROM Market\n" +
+                     "DELETE FROM Market" +
                              " WHERE postTime < DATE_SUB(NOW(),INTERVAL 2 DAY)")) {
             int deleted = ps.executeUpdate();
             w.write(gson.toJson(Map.of("deleted", deleted)));

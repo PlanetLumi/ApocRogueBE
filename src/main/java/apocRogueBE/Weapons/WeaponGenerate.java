@@ -103,7 +103,7 @@ public class WeaponGenerate implements HttpFunction {
         }
 
         // 6) Prepare response with decoded stats
-        var decoded = WeaponIDDecoder.decode(code);  // uses your decoder :contentReference[oaicite:0]{index=0}:contentReference[oaicite:1]{index=1}
+        var decoded = WeaponIDDecoder.decode(code);
         GenerateResponse out = new GenerateResponse();
         out.itemCode = code;
         out.stats    = decoded.stats;

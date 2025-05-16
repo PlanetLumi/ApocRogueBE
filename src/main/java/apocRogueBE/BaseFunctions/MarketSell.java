@@ -49,7 +49,11 @@ public class MarketSell implements HttpFunction {
                     }
                 }
             }
-
+            if (body.price <= 0) {
+                resp.setStatusCode(400);
+                w.write(gson.toJson(Map.of("error","Price must be positive")));
+                return;
+            }
             // 3) decrement inventory
             try (PreparedStatement ps = c.prepareStatement(
                     "UPDATE Inventory SET quantity=quantity-1 WHERE playerID=? AND itemID=?")) {

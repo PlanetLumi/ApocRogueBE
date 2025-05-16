@@ -111,6 +111,5 @@ public class MarketPull implements HttpFunction {
                 w.write(GSON.toJson(Map.of("error", "Database error, please retry")));
             }
         }
-    }
 
 }

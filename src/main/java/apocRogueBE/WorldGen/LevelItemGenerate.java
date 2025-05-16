@@ -75,7 +75,7 @@ public class LevelItemGenerate implements HttpFunction {
             }
         }
 
-        // 5) persist each generated code to SQL table `world_loot`
+        //persist each generated code to SQL table `world_loot`
         try (Connection conn = DataSourceSingleton.getConnection()) {
             String sql = "INSERT INTO world_loot(player_id, item_code) VALUES (?, ?)";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -126,7 +126,7 @@ public class LevelItemGenerate implements HttpFunction {
 
     private long hashSeed(int d, int s, int r, String date, float x, float y){
         SecureRandom sr = new SecureRandom();
-        long h =sr.nextLong();   // prime seed
+        long h =sr.nextLong();
         h = 31*h + d;
         h = 31*h + s;
         h = 31*h + r;

@@ -27,7 +27,7 @@ public class MarketPull implements HttpFunction {
 
             // 1) Parse filters
             MarketFilter filter = GSON.fromJson(req.getReader(), MarketFilter.class);
-
+            System.out.println("First CALL");
             try (Connection conn = DataSourceSingleton.getConnection()) {
                 // 2) Authenticate & get player skull
                 int playerId = AuthHelper.requirePlayerId(req, conn);
@@ -41,7 +41,9 @@ public class MarketPull implements HttpFunction {
                             w.write(GSON.toJson(Map.of("error", "Player not found")));
                             return;
                         }
+                        System.out.println("Player found");
                         skull = rs.getInt("playerMS");
+                        System.out.println("SKULL");
                     }
                 }
 
@@ -51,7 +53,7 @@ public class MarketPull implements HttpFunction {
                         .append("itemCode, price, postTime, itemSkull ")
                         .append("FROM Market ")
                         .append("WHERE status = 'ACTIVE' ");
-
+                System.out.println("String built" + sql.toString());
                 // 4) Optional filters
                 List<Object> params = new ArrayList<>();
                 if (filter.itemCode != null) {
@@ -66,6 +68,7 @@ public class MarketPull implements HttpFunction {
                     sql.append("AND price <= ? ");
                     params.add(filter.maxPrice);
                 }
+                System.out.println("PAST NULL BLOCKS");
 
                 // 5) Always sort first by skull-proximity…
                 sql.append("ORDER BY ABS(itemSkull - ?) ");
@@ -82,6 +85,7 @@ public class MarketPull implements HttpFunction {
                     default: // newest
                         sql.append(", postTime DESC ");
                 }
+                System.out.println("FILTER");
 
                 // 7) Pagination
                 sql.append("LIMIT ? OFFSET ? ");
@@ -91,10 +95,12 @@ public class MarketPull implements HttpFunction {
                 // 8) Execute
                 try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
                     for (int i = 0; i < params.size(); i++) {
+
                         ps.setObject(i + 1, params.get(i));
+                        System.out.println("Param " + (i + 1) + " : " + params.get(i));
                     }
                     ResultSet rs = ps.executeQuery();
-
+                    System.out.println(rs);
                     List<Map<String,Object>> rows = new ArrayList<>();
                     while (rs.next()) {
                         String code      = rs.getString("itemCode");
@@ -137,7 +143,10 @@ public class MarketPull implements HttpFunction {
                         rows.add(out);
                     }
                     w.write(GSON.toJson(rows));
+                    System.out.println(GSON.toJson(rows));
+                    System.out.println("MADE IT");
                 }
+
 
             } catch (AuthHelper.AuthException e) {
                 resp.setStatusCode(401);

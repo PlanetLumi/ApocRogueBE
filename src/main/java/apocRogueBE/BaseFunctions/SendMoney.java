@@ -2,8 +2,10 @@ package apocRogueBE.BaseFunctions;
 
 import apocRogueBE.Security.AuthHelper;
 import apocRogueBE.SingletonConnection.DataSourceSingleton;
+import com.google.cloud.functions.HttpFunction;
 import com.google.cloud.functions.HttpRequest;
 import com.google.cloud.functions.HttpResponse;
+
 import com.google.gson.Gson;
 
 import java.io.BufferedWriter;
@@ -14,7 +16,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
 
-public class SendMoney {
+public class SendMoney implements HttpFunction  {
     private static final Gson gson = new Gson();
     public void service(HttpRequest req, HttpResponse resp) throws IOException, SQLException {
         resp.setContentType("application/json");

@@ -50,6 +50,8 @@ public class MarketSell implements HttpFunction {
                         return;
                     }
                     System.out.println("Passed decrement" + ps);
+                } catch (Exception e){
+                    System.out.println(e.getMessage());
                 }
             }
             System.out.println("PASSED ITEM SELL");

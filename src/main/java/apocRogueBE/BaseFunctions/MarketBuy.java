@@ -8,11 +8,13 @@ import com.google.gson.Gson;
 import apocRogueBE.Security.AuthHelper;
 import apocRogueBE.SingletonConnection.DataSourceSingleton;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class MarketBuy implements HttpFunction {
     private static final Gson gson = new Gson();
@@ -25,7 +27,12 @@ public class MarketBuy implements HttpFunction {
     public void service(HttpRequest req, HttpResponse resp) throws Exception {
         resp.setContentType("application/json");
         BufferedWriter w = resp.getWriter();
-        BuyRequest body = gson.fromJson(req.getReader(), BuyRequest.class);
+        String raw = new BufferedReader(req.getReader())
+                .lines()
+                .collect(Collectors.joining());
+        // 2) Trim and parse to long
+        long listingId = Long.parseLong(raw.trim());
+        System.out.println("MarketBuy got listingId = " + listingId);
 
         try (Connection c = DataSourceSingleton.getConnection()) {
             c.setAutoCommit(false);
@@ -38,7 +45,7 @@ public class MarketBuy implements HttpFunction {
             String itemCode;
             try (PreparedStatement ps = c.prepareStatement(
                     "SELECT playerID, itemCode, price FROM Market WHERE listingID=? FOR UPDATE")) {
-                ps.setLong(1, body.listingID);
+                ps.setLong(1, listingId);
                 try (ResultSet rs = ps.executeQuery()) {
                     if (!rs.next()) {
                         resp.setStatusCode(404);
@@ -91,7 +98,7 @@ public class MarketBuy implements HttpFunction {
             // 6) remove the listing
             try (PreparedStatement ps = c.prepareStatement(
                     "DELETE FROM Market WHERE listingID=?")) {
-                ps.setLong(1, body.listingID);
+                ps.setLong(1, listingId);
                 ps.executeUpdate();
             }
 

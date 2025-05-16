@@ -38,8 +38,18 @@ public class WeaponIDDecoder {
         return new Decoded(typeID, skullLevel, skullSub, stats);
     }
 
-    private static int fromHex(char c) {
-        if (c >= '0' && c <= '9') return c - '0';
-        return 10 + (c - 'A');
+    public static int fromHex(char c) {
+        if (c >= '0' && c <= '9') {
+            return c - '0';                     //  0– 9
+        }
+        if (c >= 'A' && c <= 'Z') {
+            return 10 + (c - 'A');              // 10–35
+        }
+        if (c >= 'a' && c <= 'z') {
+            return 36 + (c - 'a');              // 36–61
+        }
+        throw new IllegalArgumentException(
+                "Invalid hex character: " + c
+        );
     }
 }

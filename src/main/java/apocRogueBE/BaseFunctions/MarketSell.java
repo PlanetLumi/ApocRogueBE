@@ -14,6 +14,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Map;
 
+import static apocRogueBE.Weapons.WeaponIDDecoder.fromHex;
+
 public class MarketSell implements HttpFunction {
     private static final Gson gson = new Gson();
 
@@ -55,14 +57,15 @@ public class MarketSell implements HttpFunction {
                 ps.setString(2, body.itemCode);
                 ps.executeUpdate();
             }
-
+            int skull = (fromHex(body.itemCode.charAt(4)));
             // 4) insert into Market
             try (PreparedStatement ps = c.prepareStatement(
-                    "INSERT INTO Market(playerID,itemCode,postTime,price) VALUES (?,?,NOW(),?)",
+                    "INSERT INTO Market(playerID,itemCode,postTime,price, itemSkull) VALUES (?,?,NOW(),?, ?)",
                     PreparedStatement.RETURN_GENERATED_KEYS)) {
                 ps.setInt(1, sellerId);
                 ps.setString(2, body.itemCode);
                 ps.setLong(3, body.price);
+                ps.setInt(4, skull);
                 ps.executeUpdate();
                 try (ResultSet keys = ps.getGeneratedKeys()) {
                     keys.next();

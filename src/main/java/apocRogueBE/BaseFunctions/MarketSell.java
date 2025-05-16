@@ -69,32 +69,39 @@ public class MarketSell implements HttpFunction {
                 System.out.println("Passed decrement" + ps);
                 ps.executeUpdate();
             }
-            int skull = (fromHex(body.itemCode.charAt(4)));
-            System.out.println("PASSED SKULL CHECK" + skull);
-            // 4) insert into Market
-            try (PreparedStatement ps = c.prepareStatement(
-                    "INSERT INTO Market(playerID,itemCode,postTime,price, itemSkull) VALUES (?,?,NOW(),?, ?)",
-                    PreparedStatement.RETURN_GENERATED_KEYS)) {
-                ps.setInt(1, sellerId);
-                ps.setString(2, body.itemCode);
-                ps.setLong(3, body.price);
-                ps.setInt(4, skull);
-                System.out.println("Passed market" + ps);
-                ps.executeUpdate();
-                try (ResultSet keys = ps.getGeneratedKeys()) {
-                    keys.next();
-                    long listingId = keys.getLong(1);
-                    c.commit();
-                    w.write(gson.toJson(
-                            Map.of("listingID", listingId,
-                                    "status",    "LISTED")));
-                    return;
+
+            try {
+                int skull = (fromHex(body.itemCode.charAt(4)));
+                System.out.println("PASSED SKULL CHECK" + skull);
+                // 4) insert into Market
+                try (PreparedStatement ps = c.prepareStatement(
+                        "INSERT INTO Market(playerID,itemCode,postTime,price, itemSkull) VALUES (?,?,NOW(),?, ?)",
+                        PreparedStatement.RETURN_GENERATED_KEYS)) {
+                    ps.setInt(1, sellerId);
+                    ps.setString(2, body.itemCode);
+                    ps.setLong(3, body.price);
+                    ps.setInt(4, skull);
+                    System.out.println("Passed market" + ps);
+                    ps.executeUpdate();
+                    try (ResultSet keys = ps.getGeneratedKeys()) {
+                        keys.next();
+                        long listingId = keys.getLong(1);
+                        c.commit();
+                        w.write(gson.toJson(
+                                Map.of("listingID", listingId,
+                                        "status",    "LISTED")));
+                        return;
+                    }
                 }
+
+            } catch (Exception e) {
+                resp.setStatusCode(500);
+                w.write("{\"error\":\""+e.getMessage().replace("\"","\\\"")+"\"}");
             }
 
-        } catch (Exception e) {
-            resp.setStatusCode(500);
-            w.write("{\"error\":\""+e.getMessage().replace("\"","\\\"")+"\"}");
-        }
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+
     }
 }

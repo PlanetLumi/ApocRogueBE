@@ -42,12 +42,14 @@ public class MarketSell implements HttpFunction {
                     "SELECT quantity FROM Inventory WHERE playerID=? AND itemID=? FOR UPDATE")) {
                 ps.setInt(1, sellerId);
                 ps.setString(2, body.itemCode);
+
                 try (ResultSet rs = ps.executeQuery()) {
                     if (!rs.next() || rs.getInt("quantity") < 1) {
                         resp.setStatusCode(400);
                         w.write("{\"error\":\"Not enough items to sell\"}");
                         return;
                     }
+                    System.out.println("Passed decrement" + ps);
                 }
             }
             System.out.println("PASSED ITEM SELL");

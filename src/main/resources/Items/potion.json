@@ -13,7 +13,7 @@
 
   "21": {
     "name": "Mana Potion",
-    "texturePath": "ui/potion.png",
+    "texturePath": "ui/mana-potion.png",
     "stackable": false,
     "maxStack": 5,
 

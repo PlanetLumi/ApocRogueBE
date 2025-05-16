@@ -12,14 +12,14 @@
   },
 
   "06": {
-    "name": "Iron Key",
+    "name": "Iron Key-test",
     "texturePath": "ui/potion.png",
     "stackable": false,
     "maxStack": 1
   },
 
   "07": {
-    "name": "Gold Coin",
+    "name": "Gold Coin-test",
     "texturePath": "ui/potion.png",
     "stackable": true,
     "maxStack": 99,

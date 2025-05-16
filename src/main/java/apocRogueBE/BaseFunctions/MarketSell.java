@@ -39,7 +39,7 @@ public class MarketSell implements HttpFunction {
             System.out.println("PASSED SELLER ID: " + sellerId);
             // 2) check inventory: must have at least one
             try (PreparedStatement ps = c.prepareStatement(
-                    "SELECT quantity FROM Inventory WHERE playerID=? AND itemID=? FOR UPDATE")) {
+                    "SELECT quantity FROM Inventory WHERE playerID=? AND itemCode=? FOR UPDATE")) {
                 ps.setInt(1, sellerId);
                 ps.setString(2, body.itemCode);
 

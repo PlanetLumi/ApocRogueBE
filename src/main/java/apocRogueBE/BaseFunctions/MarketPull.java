@@ -54,8 +54,7 @@ public class MarketPull implements HttpFunction {
             StringBuilder sql = new StringBuilder()
                     .append("SELECT listingID, playerID AS sellerID, ")
                     .append("itemCode, price, postTime, itemSkull ")
-                    .append("FROM Market ")
-                    .append("WHERE status = 'ACTIVE' ");
+                    .append("FROM Market ");
             System.out.println("String built" + sql.toString());
             // 4) Optional filters
             List<Object> params = new ArrayList<>();

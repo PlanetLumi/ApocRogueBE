@@ -18,6 +18,7 @@ import java.util.*;
 
 import static apocRogueBE.Weapons.WeaponGenerate.loadAllWeaponData;
 import static apocRogueBE.Weapons.WeaponIDDecoder.decode;
+import static java.lang.System.out;
 
 public class MarketPull implements HttpFunction {
     private static final Gson GSON = new Gson();
@@ -30,7 +31,7 @@ public class MarketPull implements HttpFunction {
 
         // 1) Parse filters
         MarketFilter filter = GSON.fromJson(req.getReader(), MarketFilter.class);
-        System.out.println("First CALL");
+        out.println("First CALL");
         try (Connection conn = DataSourceSingleton.getConnection()) {
             // 2) Authenticate & get player skull
             int playerId = AuthHelper.requirePlayerId(req, conn);
@@ -44,9 +45,9 @@ public class MarketPull implements HttpFunction {
                         w.write(GSON.toJson(Map.of("error", "Player not found")));
                         return;
                     }
-                    System.out.println("Player found");
+                    out.println("Player found");
                     skull = rs.getInt("playerMS");
-                    System.out.println("SKULL");
+                    out.println("SKULL");
                 }
             }
 
@@ -55,7 +56,7 @@ public class MarketPull implements HttpFunction {
                     .append("SELECT listingID, playerID AS sellerID, ")
                     .append("itemCode, price, postTime, itemSkull ")
                     .append("FROM Market ");
-            System.out.println("String built" + sql.toString());
+            out.println("String built" + sql.toString());
             // 4) Optional filters
             List<Object> params = new ArrayList<>();
             if (filter.itemCode != null) {
@@ -70,7 +71,7 @@ public class MarketPull implements HttpFunction {
                 sql.append("AND price <= ? ");
                 params.add(filter.maxPrice);
             }
-            System.out.println("PAST NULL BLOCKS");
+            out.println("PAST NULL BLOCKS");
 
             // 5) Always sort first by skull-proximity…
             sql.append("ORDER BY ABS(itemSkull - ?) ");
@@ -87,7 +88,7 @@ public class MarketPull implements HttpFunction {
                 default: // newest
                     sql.append(", postTime DESC ");
             }
-            System.out.println("FILTER");
+            out.println("FILTER");
 
             // 7) Pagination
             sql.append("LIMIT ? OFFSET ? ");
@@ -100,14 +101,14 @@ public class MarketPull implements HttpFunction {
                     for (int i = 0; i < params.size(); i++) {
 
                         ps.setObject(i + 1, params.get(i));
-                        System.out.println("Param " + (i + 1) + " : " + params.get(i));
+                        out.println("Param " + (i + 1) + " : " + params.get(i));
                     }
                 } catch (SQLException e) {
-                    System.out.println(e.toString());
+                    out.println(e.toString());
                     throw new RuntimeException(e);
                 }
                 ResultSet rs = ps.executeQuery();
-                System.out.println(rs);
+                out.println(rs);
                 List<Map<String, Object>> rows = new ArrayList<>();
                 while (rs.next()) {
                     String code = rs.getString("itemCode");
@@ -115,9 +116,7 @@ public class MarketPull implements HttpFunction {
                     skull = rs.getInt("itemSkull");
                     long listingId = rs.getLong("listingID");
                     int sellerId = rs.getInt("sellerID");
-                    Instant postTime = rs.getTimestamp("postTime").toInstant();
-
-                    // Decode the itemCode into full stats
+          // Decode the itemCode into full stats
                     WeaponIDDecoder.Decoded decoded = WeaponIDDecoder.decode(code);
                     WeaponData wd = WEAPON_DATA_MAP.get(decoded.typeID);
                     String weaponName = wd.name;
@@ -132,28 +131,30 @@ public class MarketPull implements HttpFunction {
                     int animationSpeed = statsMap.getOrDefault("animationSpeed", 0);
                     int dashDuration = statsMap.getOrDefault("dashDuration", 0);
                     int dashCoolDown = statsMap.getOrDefault("dashCoolDown", 0);
-                    Map<String, Object> out = new LinkedHashMap<>();
-                    out.put("listingID", listingId);
-                    out.put("sellerID", sellerId);
-                    out.put("itemCode", code);
-                    out.put("price", price);
-                    out.put("postTime", postTime);
-                    out.put("itemSkull", skull);
-                    out.put("name", weaponName);
-                    out.put("damage", damage);
-                    out.put("speed", animationSpeed);
-                    out.put("dashSpeed", dashSpeed);
-                    out.put("noiseLevel", noiseLevel);
-                    out.put("dashDuration", dashDuration);
-                    out.put("dashCoolDown", dashCoolDown);
+                    Map<String, Object> row = new LinkedHashMap<>();
 
-                    rows.add(out);
+                    row.put("listingID", listingId);
+                    row.put("sellerID", sellerId);
+                    row.put("itemCode", code);
+                    row.put("price", price);
+                    Instant postTime = rs.getTimestamp("postTime").toInstant();
+                    row.put("postTime", postTime.toString());
+                    row.put("itemSkull", skull);
+                    row.put("name", weaponName);
+                    row.put("damage", damage);
+                    row.put("speed", animationSpeed);
+                    row.put("dashSpeed", dashSpeed);
+                    row.put("noiseLevel", noiseLevel);
+                    row.put("dashDuration", dashDuration);
+                    row.put("dashCoolDown", dashCoolDown);
+
+                    rows.add(row);
                 }
                 w.write(GSON.toJson(rows));
-                System.out.println(GSON.toJson(rows));
-                System.out.println("MADE IT");
+                out.println(GSON.toJson(rows));
+                out.println("MADE IT");
             } catch (Exception e) {
-                System.out.println(e.toString());
+                out.println(e.toString());
             }
 
         }

@@ -63,7 +63,7 @@ public class MarketSell implements HttpFunction {
             System.out.println("PASSED 0 CHECK");
             // 3) decrement inventory
             try (PreparedStatement ps = c.prepareStatement(
-                    "UPDATE Inventory SET quantity=quantity-1 WHERE playerID=? AND itemID=?")) {
+                    "UPDATE Inventory SET quantity=quantity-1 WHERE playerID=? AND itemCode=?")) {
                 ps.setInt(1, sellerId);
                 ps.setString(2, body.itemCode);
                 System.out.println("Passed decrement" + ps);

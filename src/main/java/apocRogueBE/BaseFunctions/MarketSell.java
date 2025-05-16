@@ -49,19 +49,23 @@ public class MarketSell implements HttpFunction {
                     }
                 }
             }
+            System.out.println("PASSED ITEM SELL");
             if (body.price <= 0) {
                 resp.setStatusCode(400);
                 w.write(gson.toJson(Map.of("error","Price must be positive")));
                 return;
             }
+            System.out.println("PASSED 0 CHECK");
             // 3) decrement inventory
             try (PreparedStatement ps = c.prepareStatement(
                     "UPDATE Inventory SET quantity=quantity-1 WHERE playerID=? AND itemID=?")) {
                 ps.setInt(1, sellerId);
                 ps.setString(2, body.itemCode);
+                System.out.println("Passed decrement" + ps);
                 ps.executeUpdate();
             }
             int skull = (fromHex(body.itemCode.charAt(4)));
+            System.out.println("PASSED SKULL CHECK" + skull);
             // 4) insert into Market
             try (PreparedStatement ps = c.prepareStatement(
                     "INSERT INTO Market(playerID,itemCode,postTime,price, itemSkull) VALUES (?,?,NOW(),?, ?)",
@@ -70,6 +74,7 @@ public class MarketSell implements HttpFunction {
                 ps.setString(2, body.itemCode);
                 ps.setLong(3, body.price);
                 ps.setInt(4, skull);
+                System.out.println("Passed market" + ps);
                 ps.executeUpdate();
                 try (ResultSet keys = ps.getGeneratedKeys()) {
                     keys.next();

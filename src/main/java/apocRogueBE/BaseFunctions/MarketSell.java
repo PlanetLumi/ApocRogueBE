@@ -27,15 +27,16 @@ public class MarketSell implements HttpFunction {
     @Override
     public void service(HttpRequest req, HttpResponse resp) throws Exception {
         resp.setContentType("application/json");
+        System.out.println("CHECK");
         BufferedWriter w = resp.getWriter();
         SellRequest body = gson.fromJson(req.getReader(), SellRequest.class);
 
         try (Connection c = DataSourceSingleton.getConnection()) {
             c.setAutoCommit(false);
-
+            System.out.println("PASSED CONNNECTION");
             // 1) find playerID from token
             int sellerId = AuthHelper.requirePlayerId(req, c);
-
+            System.out.println("PASSED SELLER ID: " + sellerId);
             // 2) check inventory: must have at least one
             try (PreparedStatement ps = c.prepareStatement(
                     "SELECT quantity FROM Inventory WHERE playerID=? AND itemID=? FOR UPDATE")) {

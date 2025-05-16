@@ -29,11 +29,11 @@ public class MarketPull implements HttpFunction {
         resp.setContentType("application/json");
         BufferedWriter w = resp.getWriter();
 
-        // 1) Parse filters
+        //Parse filters
         MarketFilter filter = GSON.fromJson(req.getReader(), MarketFilter.class);
         out.println("First CALL");
         try (Connection conn = DataSourceSingleton.getConnection()) {
-            // 2) Authenticate & get player skull
+            //Authenticate & get player skull
             int playerId = AuthHelper.requirePlayerId(req, conn);
             int skull;
             try (PreparedStatement psSkull = conn.prepareStatement(
@@ -51,13 +51,13 @@ public class MarketPull implements HttpFunction {
                 }
             }
 
-            // 3) Build dynamic SQL
+            //Build dynamic SQL
             StringBuilder sql = new StringBuilder()
                     .append("SELECT listingID, playerID AS sellerID, ")
                     .append("itemCode, price, postTime, itemSkull ")
                     .append("FROM Market ");
             out.println("String built" + sql.toString());
-            // 4) Optional filters
+            //Optional filters
             List<Object> params = new ArrayList<>();
             if (filter.itemCode != null) {
                 sql.append("AND itemCode = ? ");
@@ -73,11 +73,10 @@ public class MarketPull implements HttpFunction {
             }
             out.println("PAST NULL BLOCKS");
 
-            // 5) Always sort first by skull-proximity…
+            //Always sort first by skull-proximity…
             sql.append("ORDER BY ABS(itemSkull - ?) ");
             params.add(skull);
 
-            // 6) …then by whichever secondary sort the user chose
             switch (filter.sortBy) {
                 case "priceAsc":
                     sql.append(", price ASC, postTime DESC ");
@@ -85,7 +84,7 @@ public class MarketPull implements HttpFunction {
                 case "priceDesc":
                     sql.append(", price DESC ");
                     break;
-                default: // newest
+                default:
                     sql.append(", postTime DESC ");
             }
             out.println("FILTER");
@@ -116,15 +115,14 @@ public class MarketPull implements HttpFunction {
                     skull = rs.getInt("itemSkull");
                     long listingId = rs.getLong("listingID");
                     int sellerId = rs.getInt("sellerID");
-          // Decode the itemCode into full stats
+                // Decode the itemCode into full stats
                     WeaponIDDecoder.Decoded decoded = WeaponIDDecoder.decode(code);
                     WeaponData wd = WEAPON_DATA_MAP.get(decoded.typeID);
                     String weaponName = wd.name;
 
-                    // 2) Pull out the map of all stats
+                    //Pull out the map of all stats
                     Map<String, Integer> statsMap = decoded.stats;
 
-                    // Now you can do, for example:
                     int damage = statsMap.getOrDefault("damage", 0);
                     int dashSpeed = statsMap.getOrDefault("dashSpeed", 0);
                     int noiseLevel = statsMap.getOrDefault("noiseLevel", 0);
@@ -137,7 +135,7 @@ public class MarketPull implements HttpFunction {
                     row.put("sellerID", sellerId);
                     row.put("itemCode", code);
                     row.put("price", price);
-                    Instant postTime = rs.getTimestamp("postTime").toInstant();
+                    String postTime = rs.getTimestamp("postTime").toString();
                     row.put("postTime", postTime.toString());
                     row.put("itemSkull", skull);
                     row.put("name", weaponName);

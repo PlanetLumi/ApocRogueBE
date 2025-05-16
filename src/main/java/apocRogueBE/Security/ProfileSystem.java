@@ -19,10 +19,10 @@ public class ProfileSystem implements HttpFunction {
         BufferedWriter w = resp.getWriter();
 
         try (Connection c = DataSourceSingleton.getConnection()) {
-            // 1) Authenticate and get the playerId
+            //Authenticate and get the playerId
             int playerId = AuthHelper.requirePlayerId((HttpRequest) req, c);
 
-            // 2) Load that player’s profile
+            // Load that player’s profile
             PreparedStatement ps = c.prepareStatement(
                     "SELECT username, playerMS, playerCoin FROM Player WHERE playerID = ?"
             );
@@ -45,11 +45,9 @@ public class ProfileSystem implements HttpFunction {
             w.write(gson.toJson(profile));
 
         } catch (AuthHelper.AuthException ae) {
-            // our custom exception with getStatus()
             resp.setStatusCode(ae.getStatus());
             w.write("{\"error\":\"" + ae.getMessage() + "\"}");
         } catch (Exception e) {
-            // any other error
             resp.setStatusCode(500);
             w.write("{\"error\":\"" + e.getMessage().replace("\"","\\\"") + "\"}");
         }

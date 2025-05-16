@@ -21,7 +21,6 @@ public class renewShop implements HttpFunction {
         BufferedWriter w = resp.getWriter();
 
         // Clear all past‐dates so each day starts fresh.
-        // Adjust "shop_date" predicate if your column differs.
         String sql = "DELETE FROM ShopPurchase WHERE shop_date < CURRENT_DATE";
         try (Connection conn = DataSourceSingleton.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {

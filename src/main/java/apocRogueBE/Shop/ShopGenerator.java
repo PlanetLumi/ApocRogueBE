@@ -17,34 +17,23 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.util.*;
 
-/**
- * Generates a deterministic daily shop list of encoded items for a given seller and player.
- *
- * Trader mapping (id → inventory source)
- *  ─ A : Potions  (/Items/potion.json)
- *  ─ B : General items (/Items/items.json)
- *  ─ C : Weapons   (/Weapons/items.json)
- */
+
 public class ShopGenerator {
     private static final Gson GSON = new Gson();
 
-    /*────────────────────────────────  Static data  ────────────────────────────────*/
     public static final Map<String, WeaponData> WEAPON_MAP = loadWeaponData();
     public static final ItemTypeRegistry        ITEM_REGISTRY    = loadItemRegistry();
     private static final ItemTypeRegistry        POTION_REGISTRY  = loadPotionRegistry();
 
-    /*────────────────────────────────  Public API  ────────────────────────────────*/
     public static List<ShopItem> generateShop(Random rng, String sellerId, int playerId) {
         List<String> typeIDs = SellerConfig.typeIDsFor(sellerId);
         List<ShopItem> shop  = new ArrayList<>();
 
         boolean weaponSeller  = "C".equalsIgnoreCase(sellerId);
         boolean potionSeller  = "A".equalsIgnoreCase(sellerId);
-        // default ("B" or anything else) is general‑item seller
 
         for (String typeID : typeIDs) {
             if (weaponSeller) {
-                /*───────────────  Weapon branch  ───────────────*/
                 WeaponData wd = Objects.requireNonNull(WEAPON_MAP.get(typeID),
                         () -> "Unknown weapon typeID: " + typeID);
 
@@ -55,7 +44,6 @@ public class ShopGenerator {
                 shop.add(new ShopItem(code, stock, price));
 
             } else {
-                /*───────────────  Item / Potion branch  ───────────────*/
                 ItemTypeRegistry reg = potionSeller ? POTION_REGISTRY : ITEM_REGISTRY;
                 ItemTypeInfo info   = Objects.requireNonNull(reg.getByTypeID(typeID),
                         () -> "Unknown item typeID: " + typeID);
@@ -75,7 +63,6 @@ public class ShopGenerator {
         return shop;
     }
 
-    /*────────────────────────────────  Loaders  ────────────────────────────────*/
     public static Map<String, WeaponData> loadWeaponData() {
         final String PATH = "Weapons/items.json";
         try (InputStream raw = Objects.requireNonNull(
@@ -104,7 +91,6 @@ public class ShopGenerator {
         return loadRegistryFromJson(PATH);
     }
 
-    /** Helper that deserialises a JSON array of {@link ItemTypeInfo} into a registry. */
     public static ItemTypeRegistry loadRegistryFromJson(String path) {
         try (InputStream raw = Objects.requireNonNull(
                 ShopGenerator.class.getClassLoader().getResourceAsStream(path),
@@ -115,9 +101,9 @@ public class ShopGenerator {
 
             ItemTypeRegistry reg = new ItemTypeRegistry();
             for (Map.Entry<String, JsonElement> e : root.entrySet()) {
-                String        typeID = e.getKey();                          // "hp-potion-S", "fire-scroll", …
+                String        typeID = e.getKey();
                 ItemTypeInfo  info   = GSON.fromJson(e.getValue(), ItemTypeInfo.class);
-                reg.register(typeID, info);                                 // <── new helper
+                reg.register(typeID, info);
             }
             return reg;
 
@@ -138,7 +124,6 @@ public class ShopGenerator {
     }
 
     private static int computeItemPriceForItem(ItemTypeInfo info, Map<String, Integer> rolled) {
-        // simple: sum all rolled stats × a factor
         return rolled.values().stream().mapToInt(Integer::intValue).sum() * 2;
     }
 }//

@@ -21,11 +21,11 @@ public class SendMoney implements HttpFunction  {
     public void service(HttpRequest req, HttpResponse resp) throws IOException, SQLException {
         resp.setContentType("application/json");
 
-        // 1) Open connection + writer
+        //Open connection + writer
         try (Connection conn = DataSourceSingleton.getConnection();
              BufferedWriter w = resp.getWriter()) {
 
-            // 2) Authenticate
+            //Authenticate
             final int playerId;
             try {
                 playerId = AuthHelper.requirePlayerId(req, conn);
@@ -37,7 +37,7 @@ public class SendMoney implements HttpFunction  {
                 throw new RuntimeException(e);
             }
 
-            // 3) Increment coins
+            //Increment coins
             String upd = "UPDATE Player SET playerCoin = playerCoin + 1000 WHERE playerID = ?";
             try (PreparedStatement ps = conn.prepareStatement(upd)) {
                 ps.setInt(1, playerId);
@@ -53,7 +53,6 @@ public class SendMoney implements HttpFunction  {
                 return;
             }
 
-            // 4) Read back the new total (optional, but often useful)
             long newTotal;
             String qry = "SELECT playerCoin FROM Player WHERE playerID = ?";
             try (PreparedStatement ps2 = conn.prepareStatement(qry)) {
@@ -68,7 +67,6 @@ public class SendMoney implements HttpFunction  {
                 }
             }
 
-            // 5) Return success + new total
             w.write(gson.toJson(Map.of(
                     "added", 1000,
                     "newTotal", newTotal

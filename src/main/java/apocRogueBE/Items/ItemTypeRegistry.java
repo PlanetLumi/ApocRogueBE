@@ -12,17 +12,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Registry for item types on the server side.
- * Loads definitions from JSON on the classpath, keyed by local typeID.
- */
+
 public class ItemTypeRegistry {
     private final Map<String, ItemTypeInfo> infoByTypeID = new HashMap<>();
     private static final Gson GSON = new Gson();
 
-    /**
-     * Loads item type definitions from 'data/item_types.json' on the classpath.
-     */
     public void load() {
         try (InputStream in = getClass().getClassLoader()
                 .getResourceAsStream("Items/item.json");
@@ -40,16 +34,12 @@ public class ItemTypeRegistry {
         }
     }
 
-    /**
-     * Retrieves the ItemTypeInfo for the given local typeID, or null if unknown.
-     */
+
     public ItemTypeInfo getByTypeID(String typeID) {
         return infoByTypeID.get(typeID);
     }
 
-    /**
-     * Returns the set of all available local typeIDs.
-     */
+
     public Set<String> getAllTypeIDs() {
         return infoByTypeID.keySet();
     }

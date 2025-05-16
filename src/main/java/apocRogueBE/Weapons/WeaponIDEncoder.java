@@ -2,7 +2,6 @@ package apocRogueBE.Weapons;
 
 import java.util.Map;
 
-//Builds IDs like "ID" + typeID(2) + skull(1)+sub(1) + 2hex per stat
 public class WeaponIDEncoder {
     private static final String[] HEX = {
             "0","1","2","3","4","5","6","7","8","9",    // 0–9

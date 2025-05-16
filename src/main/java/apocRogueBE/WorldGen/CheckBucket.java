@@ -75,7 +75,6 @@ public class CheckBucket implements HttpFunction {
             }
         }
 
-        // passed: delete rows for this player
         try (Connection conn = DataSourceSingleton.getConnection();
              PreparedStatement ps = conn.prepareStatement(
                      "DELETE FROM world_loot WHERE player_id = ?")) {

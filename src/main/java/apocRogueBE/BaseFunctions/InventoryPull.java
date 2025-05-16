@@ -26,7 +26,7 @@ public class InventoryPull implements HttpFunction {
         try (Connection conn = DataSourceSingleton.getConnection();
              BufferedWriter w = resp.getWriter())
         {
-            // 1) Authenticate
+            // Authenticate
             final int playerId;
             try {
                 playerId = AuthHelper.requirePlayerId(req, conn);
@@ -36,7 +36,7 @@ public class InventoryPull implements HttpFunction {
                 return;
             }
 
-            // 2) Query inventory
+            //Query inventory
             List<Map<String,Object>> out = new ArrayList<>();
             String sql = "SELECT itemCode, quantity FROM Inventory WHERE playerID=?";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -59,7 +59,6 @@ public class InventoryPull implements HttpFunction {
                 }
 
             } catch (SQLTransientConnectionException e) {
-                // pool timeout – tell client to retry
                 resp.setStatusCode(503);
                 w.write(gson.toJson(Map.of("error","Database busy, please retry")));
                 return;
@@ -70,17 +69,15 @@ public class InventoryPull implements HttpFunction {
                 return;
             }
 
-            // 3) Return success
+            // Return success
             resp.setStatusCode(200);
             w.write(gson.toJson(out));
 
         } catch (SQLTransientConnectionException e) {
-            // failed to even get a Connection
-            resp.setStatusCode(503);
+             resp.setStatusCode(503);
             try { resp.getWriter().write(gson.toJson(Map.of("error","Database busy, please retry"))); }
             catch (Exception ignored) {}
         } catch (Exception e) {
-            // any other unexpected failure
             resp.setStatusCode(500);
             try { resp.getWriter().write(gson.toJson(Map.of("error", e.getMessage()))); }
             catch (Exception ignored) {}

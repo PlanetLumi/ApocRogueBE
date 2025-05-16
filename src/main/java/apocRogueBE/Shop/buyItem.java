@@ -1,4 +1,3 @@
-// File: buyItem.java   (back-end Cloud Function)
 package apocRogueBE.Shop;
 
 import com.google.cloud.functions.*;
@@ -25,16 +24,16 @@ public class buyItem implements HttpFunction {
         try (BufferedWriter out = resp.getWriter();
              Connection conn = DataSourceSingleton.getConnection()) {
 
-            /* 1 ── parse JSON */
+            //parse JSON
             BuyReq br = GSON.fromJson(req.getReader(), BuyReq.class);
             if (br==null||br.sellerID()==null||br.itemCode()==null||br.count()<1) {
                 resp.setStatusCode(400); out.write("{\"error\":\"bad json\"}"); return;
             }
 
-            /* 2 ── auth */
+            //  auth
             int playerId = AuthHelper.requirePlayerId(req, conn);
 
-            /* 3 ── deterministically rebuild today's shop to know true price */
+            // deterministically rebuild today's shop to know true price
             String today = LocalDate.now().toString();
             long seed = Objects.hash(playerId, br.sellerID(), today, VERSION, SECRET);
             Random rng = new Random(seed);
@@ -49,7 +48,7 @@ public class buyItem implements HttpFunction {
             }
             int totalCost = wanted.getPrice() * br.count();
 
-            /* 4 ── load player's gold & spent gauge */
+
             conn.setAutoCommit(false);
 
             int gold;
@@ -76,18 +75,16 @@ public class buyItem implements HttpFunction {
                 return;
             }
 
-            /* ---------- 5 ── debit coin and add to amountSpentX ---------- */
             try (PreparedStatement ps = conn.prepareStatement(
                     "UPDATE Player SET playerCoin = playerCoin-?, "
                             + spentColumn + " = " + spentColumn + " + ? "
                             + "WHERE playerID=?")) {
                 ps.setInt(1, totalCost);
-                ps.setInt(2, totalCost);   // add full price to the seller’s spent column
+                ps.setInt(2, totalCost);
                 ps.setInt(3, playerId);
                 ps.executeUpdate();
             }
 
-            /* 6 ── upsert ShopPurchase (track stock) */
             try (PreparedStatement ps = conn.prepareStatement(
                     """
                     INSERT INTO ShopPurchase(player_id,seller_id,shop_date,item_code,quantity)
@@ -121,7 +118,7 @@ public class buyItem implements HttpFunction {
             } catch (SQLException ex) {
                 System.err.println("Inventory insert failed: SQLState="+ex.getSQLState()
                         +"  msg="+ex.getMessage());
-                throw ex;               // keep rollback behaviour unchanged
+                throw ex;
             }
 
             conn.commit();

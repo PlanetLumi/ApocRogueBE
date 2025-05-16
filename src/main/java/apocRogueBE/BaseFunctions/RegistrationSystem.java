@@ -28,7 +28,7 @@ public class RegistrationSystem implements HttpFunction {
         response.setContentType("application/json");
         UserCredentials cred = gson.fromJson(request.getReader(), UserCredentials.class);
 
-        // 0) Basic validation
+        //Basic validation
         if (cred.getUsername() == null || cred.getPassword() == null) {
             response.setStatusCode(400);
             w.write("{\"error\":\"Missing username or password\"}");
@@ -59,7 +59,7 @@ public class RegistrationSystem implements HttpFunction {
                 }
             }
 
-            // 3) Create the Player row and grab its ID
+            //Create the Player row and grab its ID
             int playerId;
             try (PreparedStatement ps = conn.prepareStatement(
                     "INSERT INTO Player(username, playerMS, playerCoin) VALUES (?,0,0)",
@@ -76,7 +76,7 @@ public class RegistrationSystem implements HttpFunction {
                 }
             }
 
-            // 4) Insert credentials tied to that playerID
+            //Insert credentials tied to that playerID
             try (PreparedStatement ps = conn.prepareStatement(
                     "INSERT INTO UserCredentials(playerID,username,password) VALUES (?,?,?)")) {
                 ps.setInt(1, playerId);
@@ -87,7 +87,7 @@ public class RegistrationSystem implements HttpFunction {
                 }
             }
 
-            // 5) Commit & respond
+            //Commit & respond
             conn.commit();
             response.setStatusCode(200);
             w.write("{\"registered\":true}");

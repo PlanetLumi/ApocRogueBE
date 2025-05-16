@@ -12,7 +12,7 @@ import java.util.*;
 
 public class InventoryIntegrationTest {
 
-    // your Cloud Functions base URL
+    // cloud Functions base URL
     private static final String BASE           =
             "https://europe-west2-studious-camp-458516-f5.cloudfunctions.net";
     private static final String LOGIN_ENDPOINT = BASE + "/loginSystem";
@@ -24,7 +24,7 @@ public class InventoryIntegrationTest {
             new TypeToken<List<Map<String,Object>>>(){}.getType();
 
     public static void main(String[] args) throws Exception {
-        // 1) Log in
+        //Log in
         String loginPayload = gson.toJson(Map.of(
                 "username","Lumie", "password","FuckYOU123!"
         ));
@@ -36,7 +36,7 @@ public class InventoryIntegrationTest {
                 .getAsJsonObject();
         String jwt = loginJson.get("token").getAsString();
 
-        // 2) Build a fake inventory push
+        // Build  fake inventory push
         String typeID = "01";
         Map<String,Integer> baseStats = new HashMap<>();
         for (String k : apocRogueBE.Weapons.StatKeys.ALL) baseStats.put(k,5);
@@ -52,15 +52,11 @@ public class InventoryIntegrationTest {
         entry.put("stats",      decoded.stats);
         entry.put("count",      1);
 
-        // String pushJson = gson.toJson(Map.of("inventory", List.of(entry)));
-        //HttpResult pushNoJwt = doPost(PUSH_ENDPOINT, "{\"inventory\":[]}", null);
-        //System.out.printf("PUSH (no JWT) → %d%n%s%n", pushNoJwt.status, pushNoJwt.body);
+
 
         HttpResult pullNoJwt = doPost(PULL_ENDPOINT, "{}", null);
         System.out.printf("PULL (no JWT) → %d%n%s%n", pullNoJwt.status, pullNoJwt.body);
 
-        //HttpResult pushWithJwt = doPost(PUSH_ENDPOINT, pushJson, jwt);
-        // System.out.printf("PUSH (with JWT) → %d%n%s%n", pushWithJwt.status, pushWithJwt.body);
 
         HttpResult pullWithJwt = doPost(PULL_ENDPOINT, "{}", jwt);
         System.out.printf("PULL (with JWT) → %d%n%s%n", pullWithJwt.status, pullWithJwt.body);
@@ -71,7 +67,6 @@ public class InventoryIntegrationTest {
                     gson.fromJson(pullWithJwt.body, listOfMapsType);
 
             System.out.println("=> Parsed pull:");
-            // now each `item` is a Map, so .get("itemCode") compiles
             for (Map<String,Object> item : items) {
                 System.out.printf("   %s → count=%s%n",
                         item.get("itemCode"),
@@ -80,7 +75,6 @@ public class InventoryIntegrationTest {
         }
     }
 
-    // A little holder so we don’t collide with Google’s HttpResponse
     private static class HttpResult {
         final int    status;
         final String body;

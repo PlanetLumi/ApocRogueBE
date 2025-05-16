@@ -30,17 +30,16 @@ public class MarketBuy implements HttpFunction {
         String raw = new BufferedReader(req.getReader())
                 .lines()
                 .collect(Collectors.joining());
-        // 2) Trim and parse to long
+        //Trim and parse to long
         long listingId = Long.parseLong(raw.trim());
         System.out.println("MarketBuy got listingId = " + listingId);
 
         try (Connection c = DataSourceSingleton.getConnection()) {
             c.setAutoCommit(false);
 
-            // 1) who is buying?
             int buyerId = AuthHelper.requirePlayerId(req, c);
 
-            // 2) lock the listing row
+            //lock the listing row
             long sellerId, price;
             String itemCode;
             try (PreparedStatement ps = c.prepareStatement(
@@ -58,7 +57,7 @@ public class MarketBuy implements HttpFunction {
                 }
             }
 
-            // 3) check buyer has enough coins
+            // check buyer has enough coins
             try (PreparedStatement ps = c.prepareStatement(
                     "SELECT playerCoin FROM Player WHERE playerID=? FOR UPDATE")) {
                 ps.setInt(1, buyerId);
@@ -72,7 +71,7 @@ public class MarketBuy implements HttpFunction {
                 }
             }
 
-            // 4) transfer coins
+            // transfer coins
             try (PreparedStatement ps = c.prepareStatement(
                     "UPDATE Player SET playerCoin=playerCoin-? WHERE playerID=?")) {
                 ps.setLong(1, price);
@@ -86,7 +85,7 @@ public class MarketBuy implements HttpFunction {
                 ps.executeUpdate();
             }
 
-            // 5) add to buyer inventory (upsert)
+            //add to buyer inventory (upsert)
             try (PreparedStatement ps = c.prepareStatement(
                     "INSERT INTO Inventory(playerID,itemCode,quantity) VALUES(?,?,1)\n" +
                             " ON DUPLICATE KEY UPDATE quantity=quantity+1")) {
@@ -95,7 +94,7 @@ public class MarketBuy implements HttpFunction {
                 ps.executeUpdate();
             }
 
-            // 6) remove the listing
+            //remove the listing
             try (PreparedStatement ps = c.prepareStatement(
                     "DELETE FROM Market WHERE listingID=?")) {
                 ps.setLong(1, listingId);

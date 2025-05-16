@@ -35,7 +35,6 @@ public class SetMS implements HttpFunction {
                 return;
             }
 
-            // Parse the new skull (playerMS) value from query or body
             Long newMs = null;
             // Try query parameter first
             if (req.getFirstQueryParameter("playerMS").isPresent()) {
@@ -48,7 +47,6 @@ public class SetMS implements HttpFunction {
                     return;
                 }
             } else {
-                // Alternatively read from body
                 try {
                     String body = new String(req.getInputStream().readAllBytes());
                     Map<?, ?> data = gson.fromJson(body, Map.class);
@@ -56,12 +54,10 @@ public class SetMS implements HttpFunction {
                         newMs = ((Number) data.get("playerMS")).longValue();
                     }
                 } catch (Exception e) {
-                    // ignore, will handle null below
                 }
             }
 
             if (newMs == null) {
-                // 400 Bad Request
                 resp.setStatusCode(400);
                 writer.write(gson.toJson(Map.of("error", "Missing playerMS parameter")));
                 return;
@@ -83,7 +79,6 @@ public class SetMS implements HttpFunction {
                     writer.write(gson.toJson(Map.of("playerID", playerId, "playerMS", newMs)));
                 }
             } catch (SQLException e) {
-                // 503 Service Unavailable
                 resp.setStatusCode(503);
                 writer.write(gson.toJson(Map.of("error", "Database error, please retry")));
             }

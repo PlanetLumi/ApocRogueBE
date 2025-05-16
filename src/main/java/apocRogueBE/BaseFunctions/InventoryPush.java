@@ -34,7 +34,7 @@ public class InventoryPush implements HttpFunction {
         resp.setContentType("application/json");
         BufferedWriter w = resp.getWriter();
 
-        // 1) parse request
+        // parse request
         PushRequest push;
         try {
             push = gson.fromJson(req.getReader(), PushRequest.class);
@@ -49,7 +49,7 @@ public class InventoryPush implements HttpFunction {
             return;
         }
 
-        // 2) auth & DB
+        //auth & DB
         try (Connection conn = DataSourceSingleton.getConnection()) {
             final int playerId;
             try {
@@ -67,7 +67,7 @@ public class InventoryPush implements HttpFunction {
                     + "ON DUPLICATE KEY UPDATE quantity = ?";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 for (ItemEntry e : push.inventory) {
-                    // server-side ID encoding
+                    //server-side ID encoding
                     String code = WeaponIDEncoder.encode(
                             e.typeID, e.skullLevel, e.skullSub, e.stats
                     );

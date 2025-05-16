@@ -11,10 +11,7 @@ import java.sql.ResultSet;
 import java.sql.Timestamp;
 
 public class AuthHelper {
-    /**
-     * Reads “Authorization: Bearer <token>”, looks up Session,
-     * and returns the playerId, or throws an HttpException(401).
-     */
+
     public static int requirePlayerId(HttpRequest req, Connection c) throws Exception {
         String auth = req.getFirstHeader("Authorization").orElse("");
         if (!auth.startsWith("Bearer ")) throw new HttpException();

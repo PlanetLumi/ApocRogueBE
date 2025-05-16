@@ -43,23 +43,19 @@ public class LevelItemGenerate implements HttpFunction {
         resp.setContentType("application/json");
         BufferedWriter out = resp.getWriter();
 
-        // 1) authenticate and get player ID
         int playerId;
         try (Connection c = DataSourceSingleton.getConnection()) {
             playerId = AuthHelper.requirePlayerId(req, c);
         }
 
-        // 2) parse request
         GenerateRequest g = GSON.fromJson(new InputStreamReader(req.getInputStream()), GenerateRequest.class);
         if (g == null) { resp.setStatusCode(400); out.write("{\"error\":\"bad json\"}"); return; }
         int drops = Math.max(1, Math.min(g.count, 5));
 
-        // 3) compute deterministic seed
         long seed = hashSeed(g.difficulty, g.subLevel, g.radiation,
                 LocalDate.now().toString(), g.chestX, g.chestY);
         Random rng = new Random(seed);
 
-        // 4) roll loot
         List<GenerateResponse> loot = new ArrayList<>();
         for (int i = 0; i < drops; i++) {
             boolean rollWeapon = rng.nextBoolean();
@@ -92,11 +88,9 @@ public class LevelItemGenerate implements HttpFunction {
             }
         }
 
-        // 6) return loot list to client
         out.write(GSON.toJson(loot));
     }
 
-    // helper methods unchanged from original
     private String pickWeaponTypeForLevel(Random rng) {
         List<String> ids = new ArrayList<>(WEAPON_MAP.keySet());
         return ids.get(rng.nextInt(ids.size()));
@@ -106,7 +100,6 @@ public class LevelItemGenerate implements HttpFunction {
         return ids.get(rng.nextInt(ids.size()));
     }
 
-    /* ─────────── helper: stat rollers ──────────────────────────────────── */
     private Map<String,Integer> rollWeaponStats(Random rng, WeaponData wd, int diff, int rad) {
         double scale = 1 + diff*0.4 + rad*0.01;
         Map<String,Integer> m = new HashMap<>();
@@ -131,7 +124,6 @@ public class LevelItemGenerate implements HttpFunction {
     }
 
 
-    /* ─────────── seed mixer ─────────────────────────────── */
     private long hashSeed(int d, int s, int r, String date, float x, float y){
         SecureRandom sr = new SecureRandom();
         long h =sr.nextLong();   // prime seed

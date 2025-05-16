@@ -18,8 +18,8 @@ public class MarketUpdateListing implements HttpFunction {
 
     static class UpdateRequest {
         public long listingID;
-        public Long newPrice;             // optional
-        public Instant newExpiresAt;      // optional, if you add an expiresAt column
+        public Long newPrice;            
+        public Instant newExpiresAt;   
     }
 
     @Override
@@ -31,7 +31,7 @@ public class MarketUpdateListing implements HttpFunction {
         try (Connection c = DataSourceSingleton.getConnection()) {
             c.setAutoCommit(false);
 
-            // 1) Verify caller owns this listing
+            // Verify caller owns this listing
             int seller = AuthHelper.requirePlayerId(req, c);
             try (PreparedStatement ps = c.prepareStatement(
                     "SELECT playerID FROM Market WHERE listingID=? FOR UPDATE")) {
@@ -44,7 +44,7 @@ public class MarketUpdateListing implements HttpFunction {
                 }
             }
 
-            // 2) Build dynamic UPDATE
+            //Build dynamic UPDATE
             StringBuilder sql = new StringBuilder("UPDATE Market SET ");
             List<Object> args = new ArrayList<>();
             if (u.newPrice != null) {

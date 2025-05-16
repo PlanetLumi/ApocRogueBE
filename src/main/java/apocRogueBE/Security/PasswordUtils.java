@@ -7,13 +7,11 @@ import org.mindrot.jbcrypt.BCrypt;
 public final class PasswordUtils {
     private PasswordUtils() {} // no‐one should instantiate this
 
-    /** Hash a plain password for storage. */
     public static String hash(String plain) {
         // work factor (12) can be tuned for your latency/SLA needs
         return BCrypt.hashpw(plain, BCrypt.gensalt(12));
     }
 
-    /** Verify that a plain password matches the stored hash. */
     public static boolean verify(String plain, String storedHash) {
         if (storedHash == null || !storedHash.startsWith("$2a$")) {
             throw new IllegalArgumentException("Invalid hash provided for comparison");
@@ -26,13 +24,12 @@ public final class PasswordUtils {
             return false;
         }
 
-        // regex enforces one of each category; “.+” then consumes the rest
         String pattern =
                 "^(?=.*[A-Z])"      // at least one uppercase
                         + "(?=.*[a-z])"       // at least one lowercase
                         + "(?=.*\\d)"         // at least one digit
                         + "(?=.*[!@#$&*])"    // at least one special char from this set
-                        + ".+$";              // consume the rest
+                        + ".+$";
 
         return password.matches(pattern);
     }

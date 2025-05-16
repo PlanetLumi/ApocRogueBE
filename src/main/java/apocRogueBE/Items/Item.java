@@ -4,11 +4,7 @@ package apocRogueBE.Items;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Represents an item instance in the back-end domain.
- * This class holds only the ID, metadata stats, and basic flags;
- * visual data (textures) are handled in the front end.
- */
+
 public class Item {
     private final String id;
     private final Map<String,Integer> stats = new LinkedHashMap<>();

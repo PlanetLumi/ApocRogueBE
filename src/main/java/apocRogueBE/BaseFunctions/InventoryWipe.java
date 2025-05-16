@@ -66,7 +66,6 @@ public class InventoryWipe implements HttpFunction {
 
             conn.setAutoCommit(false);
 
-            // Prepare statements: decrement if >1, otherwise delete
             String updateSql = "UPDATE Inventory SET quantity = quantity - 1"
                     + " WHERE playerID = ? AND itemCode = ? AND quantity > 1";
             String deleteSql = "DELETE FROM Inventory"
@@ -81,7 +80,6 @@ public class InventoryWipe implements HttpFunction {
                     int updated = updatePs.executeUpdate();
 
                     if (updated == 0) {
-                        // Either not found or count was 1: remove entirely
                         deletePs.setInt(1, playerId);
                         deletePs.setString(2, item.itemCode);
                         deletePs.executeUpdate();

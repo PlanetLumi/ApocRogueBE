@@ -21,7 +21,7 @@ public class MarketSell implements HttpFunction {
 
     static class SellRequest {
         String itemCode;
-        long price;      // in cents
+        long price;
     }
 
     @Override
@@ -34,10 +34,10 @@ public class MarketSell implements HttpFunction {
         try (Connection c = DataSourceSingleton.getConnection()) {
             c.setAutoCommit(false);
             System.out.println("PASSED CONNNECTION");
-            // 1) find playerID from token
+            //find playerID from token
             int sellerId = AuthHelper.requirePlayerId(req, c);
             System.out.println("PASSED SELLER ID: " + sellerId);
-            // 2) check inventory: must have at least one
+            // check inventory - must have at least one
             try (PreparedStatement ps = c.prepareStatement(
                     "SELECT quantity FROM Inventory WHERE playerID=? AND itemCode=? FOR UPDATE")) {
                 ps.setInt(1, sellerId);
@@ -61,7 +61,7 @@ public class MarketSell implements HttpFunction {
                 return;
             }
             System.out.println("PASSED 0 CHECK");
-            // 3) decrement inventory
+            //ecrement inventory
             try (PreparedStatement ps = c.prepareStatement(
                     "UPDATE Inventory SET quantity=quantity-1 WHERE playerID=? AND itemCode=?")) {
                 ps.setInt(1, sellerId);
@@ -73,7 +73,7 @@ public class MarketSell implements HttpFunction {
             try {
                 int skull = (fromHex(body.itemCode.charAt(4)));
                 System.out.println("PASSED SKULL CHECK" + skull);
-                // 4) insert into Market
+                //insert into Market
                 try (PreparedStatement ps = c.prepareStatement(
                         "INSERT INTO Market(playerID,itemCode,postTime,price, itemSkull) VALUES (?,?,NOW(),?, ?)",
                         PreparedStatement.RETURN_GENERATED_KEYS)) {

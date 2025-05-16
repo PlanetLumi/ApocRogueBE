@@ -1,4 +1,3 @@
-// File: apocRogueBE/Items/ItemIDEncoder.java
 package apocRogueBE.Items;
 
 import java.util.Map;
@@ -17,25 +16,16 @@ public class ItemIDEncoder {
             "u","v","w","x","y","z"                     // 56–61
     };
 
-    /**
-     * Encodes an item into a compact string:
-     *  - "IT" prefix
-     *  - 2‐char typeID
-     *  - then, for each stat (in alphabetical order), one hex pair
-     */
     public static String encode(String typeID, Map<String,Integer> stats) {
         StringBuilder sb = new StringBuilder("IT");
         sb.append(typeID);
 
-        // sort the keys so encoding is stable
         List<String> keys = new ArrayList<>(stats.keySet());
         Collections.sort(keys);
 
         for (String key : keys) {
             int v = stats.getOrDefault(key, 0);
-            // clamp to [0,255]
             v = Math.max(0, Math.min(v, 255));
-            // append two hex digits
             sb.append(HEX[(v >> 4) & 0xF])
                     .append(HEX[v & 0xF]);
         }

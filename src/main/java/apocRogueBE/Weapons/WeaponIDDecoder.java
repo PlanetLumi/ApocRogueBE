@@ -18,7 +18,6 @@ public class WeaponIDDecoder {
     }
 
     public static Decoded decode(String id) {
-        // 2 chars "ID" + 2 typeID + 1 skull + 1 sub + 2*StatKeys.ALL.length
         int expectedLen = 2 + 2 + 1 + 1 + StatKeys.ALL.length * 2;
         if (!id.startsWith("ID") || id.length() != expectedLen) {
             throw new IllegalArgumentException("Invalid ID: " + id);

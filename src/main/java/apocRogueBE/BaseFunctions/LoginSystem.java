@@ -31,13 +31,12 @@ public class LoginSystem implements HttpFunction {
         BufferedWriter w = resp.getWriter();
         UserCredentials cred = gson.fromJson(req.getReader(), UserCredentials.class);
 
-        // … validation omitted for brevity …
 
         String sql = "SELECT playerID, password FROM UserCredentials WHERE username = ?";
         try (Connection c = DataSourceSingleton.getConnection();
              PreparedStatement selectStmt = c.prepareStatement(sql)) {
 
-            // 1) Lookup user ID and hash
+            //Lookup user ID and hash
             selectStmt.setString(1, cred.getUsername());
             int playerId;
             String storedHash;
@@ -51,7 +50,7 @@ public class LoginSystem implements HttpFunction {
                 storedHash = rs.getString("password");
             }
 
-            // 2) Verify password
+            // Verify password
             boolean ok = PasswordUtils.verify(cred.getPassword(), storedHash);
             if (!ok) {
                 resp.setStatusCode(401);
@@ -59,15 +58,14 @@ public class LoginSystem implements HttpFunction {
                 return;
             }
 
-            // 3) Generate a session token
+            //Generate a session token
             byte[] bytes = new byte[32];
             rnd.nextBytes(bytes);
             String token = BaseEncoding.base16().lowerCase().encode(bytes);
-            // you can also use new Timestamp(System.currentTimeMillis() + …) if Timestamp.from(...) gives you trouble
             Timestamp expires = Timestamp.from(
                     Instant.now().plus(Duration.ofMinutes(TTL_MINUTES)));
 
-            // 4) Insert into Session (note the new variable name insertStmt)
+            // Insert into Session
             String insertSql =
                     "INSERT INTO Session(token,playerID,expires_at) VALUES (?,?,?)";
             try (PreparedStatement insertStmt = c.prepareStatement(insertSql)) {
@@ -77,7 +75,7 @@ public class LoginSystem implements HttpFunction {
                 insertStmt.executeUpdate();
             }
 
-            // 5) Return the token
+            // Return the token
             resp.setStatusCode(200);
             w.write(gson.toJson(Map.of(
                     "authenticated", true,

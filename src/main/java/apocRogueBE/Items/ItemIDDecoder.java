@@ -1,4 +1,3 @@
-// File: apocRogueBE.Items/ItemIDDecoder.java
 package apocRogueBE.Items;
 
 import java.util.LinkedHashMap;
@@ -7,9 +6,6 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
 
-/**
- * Reverse of ItemIDEncoder: parses "IT" + typeID + hex-pairs back into stats.
- */
 public class ItemIDDecoder {
     public static class Decoded {
         public final String typeID;
@@ -20,9 +16,7 @@ public class ItemIDDecoder {
         }
     }
 
-    /**
-     * Decode an itemCode produced by ItemIDEncoder.
-     */
+
     public static Decoded decode(String id) {
         if (!id.startsWith("IT") || id.length() < 4) {
             throw new IllegalArgumentException("Invalid item ID: " + id);

@@ -22,7 +22,7 @@ public class GetMaxLevel {
      public void service(HttpRequest req, HttpResponse resp) throws IOException, SQLException {
             resp.setContentType("application/json");
 
-            // wrap the entire DB interaction in try-with-resources so Connection is always closed
+            //CHeck connection
             try (Connection conn = DataSourceSingleton.getConnection();
                  BufferedWriter w = resp.getWriter())
             {
@@ -35,7 +35,7 @@ public class GetMaxLevel {
                     return;
                 }
 
-                // 2) Query inventory
+                //Query inventory
                 int skull = 0;
                 String sql = "SELECT playerMS FROM Player WHERE playerID=?";
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -47,7 +47,6 @@ public class GetMaxLevel {
                     }
 
                 } catch (SQLException e) {
-                    // pool timeout – tell client to retry
                     resp.setStatusCode(503);
                     w.write(gson.toJson(Map.of("error","Database busy, please retry")));
                 }

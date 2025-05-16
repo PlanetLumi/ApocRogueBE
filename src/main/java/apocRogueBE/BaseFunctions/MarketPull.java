@@ -1,5 +1,7 @@
 package apocRogueBE.BaseFunctions;
 
+import apocRogueBE.Weapons.WeaponData;
+import apocRogueBE.Weapons.WeaponIDDecoder;
 import com.google.cloud.functions.HttpFunction;
 import com.google.cloud.functions.HttpRequest;
 import com.google.cloud.functions.HttpResponse;
@@ -9,11 +11,15 @@ import apocRogueBE.SingletonConnection.DataSourceSingleton;
 
 import java.io.BufferedWriter;
 import java.sql.*;
+import java.time.Instant;
 import java.util.*;
+
+import static apocRogueBE.Weapons.WeaponGenerate.loadAllWeaponData;
+import static apocRogueBE.Weapons.WeaponIDDecoder.decode;
 
 public class MarketPull implements HttpFunction {
         private static final Gson GSON = new Gson();
-
+    private static final Map<String, WeaponData> WEAPON_DATA_MAP = loadAllWeaponData();
         @Override
         public void service(HttpRequest req, HttpResponse resp) throws Exception {
             resp.setContentType("application/json");
@@ -91,14 +97,44 @@ public class MarketPull implements HttpFunction {
 
                     List<Map<String,Object>> rows = new ArrayList<>();
                     while (rs.next()) {
-                        rows.add(Map.of(
-                                "listingID",  rs.getLong("listingID"),
-                                "sellerID",   rs.getInt("sellerID"),
-                                "itemCode",   rs.getString("itemCode"),
-                                "price",      rs.getLong("price"),
-                                "postTime",   rs.getTimestamp("postTime").toInstant(),
-                                "itemSkull",  rs.getInt("itemSkull")
-                        ));
+                        String code      = rs.getString("itemCode");
+                        long   price     = rs.getLong("price");
+                        skull     = rs.getInt("itemSkull");
+                        long   listingId = rs.getLong("listingID");
+                        int    sellerId  = rs.getInt("sellerID");
+                        Instant postTime = rs.getTimestamp("postTime").toInstant();
+
+                        // Decode the itemCode into full stats
+                        WeaponIDDecoder.Decoded decoded = WeaponIDDecoder.decode(code);
+                        WeaponData wd = WEAPON_DATA_MAP.get(decoded.typeID);
+                        String weaponName = wd.name;
+
+                        // 2) Pull out the map of all stats
+                        Map<String,Integer> statsMap = decoded.stats;
+
+                        // Now you can do, for example:
+                        int damage    = statsMap.getOrDefault("damage", 0);
+                        int dashSpeed = statsMap.getOrDefault("dashSpeed", 0);
+                        int noiseLevel = statsMap.getOrDefault("noiseLevel", 0);
+                        int animationSpeed = statsMap.getOrDefault("animationSpeed", 0);
+                        int dashDuration = statsMap.getOrDefault("dashDuration", 0);
+                        int dashCoolDown = statsMap.getOrDefault("dashCoolDown", 0);
+                        Map<String,Object> out = new LinkedHashMap<>();
+                        out.put("listingID",   listingId);
+                        out.put("sellerID",    sellerId);
+                        out.put("itemCode",    code);
+                        out.put("price",       price);
+                        out.put("postTime",    postTime);
+                        out.put("itemSkull",   skull);
+                        out.put("name",        weaponName);
+                        out.put("damage",      damage);
+                        out.put("speed",       animationSpeed);
+                        out.put("dashSpeed",   dashSpeed);
+                        out.put("noiseLevel",  noiseLevel);
+                        out.put("dashDuration",dashDuration);
+                        out.put("dashCoolDown",dashCoolDown);
+
+                        rows.add(out);
                     }
                     w.write(GSON.toJson(rows));
                 }

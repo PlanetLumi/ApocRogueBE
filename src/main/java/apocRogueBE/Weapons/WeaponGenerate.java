@@ -37,7 +37,7 @@ public class WeaponGenerate implements HttpFunction {
         String itemCode;
         Map<String,Integer> stats;
     }
-    private static Map<String,WeaponData> loadAllWeaponData() {
+    public static Map<String,WeaponData> loadAllWeaponData() {
         try (InputStream in = WeaponGenerate.class
                 .getClassLoader()
                 .getResourceAsStream("Weapons/items.json")) {

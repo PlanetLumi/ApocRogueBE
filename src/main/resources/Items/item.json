@@ -2,7 +2,7 @@
 
   "05": {
     "name": "Med-Kit",
-    "texturePath": "ui/potion.png",
+    "texturePath": "ui/medkit.png",
     "stackable": true,
     "maxStack": 3,
     "statRanges": {
